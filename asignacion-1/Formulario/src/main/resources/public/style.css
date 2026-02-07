@@ -1,0 +1,24 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    text-align: center;
+}
+
+form {
+    background: #a1a1a1;
+    padding: 10px;
+    display: inline-block;
+    margin-top: 10px;
+}
+
+input {
+    margin: 5px;
+    padding: 10px;
+    background: white;
+}
+
+button {
+    margin: 5px;
+    padding: 10px;
+    background: lightskyblue;
+}
