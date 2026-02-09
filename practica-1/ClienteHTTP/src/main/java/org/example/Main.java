@@ -17,7 +17,6 @@ import static java.lang.System.out;
 
 public class Main {
     static void main() throws IOException, InterruptedException {
-       //var app = Javalin.create().start(7070);
 
         Scanner scanner = new Scanner(in);
         String input;
@@ -117,11 +116,12 @@ public class Main {
                 HttpRequest request = HttpRequest.newBuilder()
                         .uri(URI.create(postEncontrado))
                         .header("matricula-id", "10154465")
+                        .header("Content-Type", "application/x-www-form-urlencoded")
                         .POST(HttpRequest.BodyPublishers.ofString("asignatura=practica1"))
                         .build();
 
                 HttpClient client = HttpClient.newHttpClient();
-                HttpResponse<String> responsePost = client.send(request, HttpResponse.BodyHandlers.ofString());
+                client.send(request, HttpResponse.BodyHandlers.ofString());
             }
         }
     }
