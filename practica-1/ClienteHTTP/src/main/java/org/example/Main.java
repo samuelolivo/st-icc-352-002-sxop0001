@@ -1,7 +1,5 @@
 package org.example;
 
-import io.javalin.Javalin;
-
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -27,7 +25,19 @@ public class Main {
             request = requestValido(input);
         } while (request == null);
 
+        //Para determinar el tipo de recurso
+        HttpResponse<String> response = HttpClient.newHttpClient()
+                .send(request, HttpResponse.BodyHandlers.ofString());
 
+        String tipoRecurso = response.headers()
+                .firstValue("Content-Type")
+                .orElse("desconocido");
+
+        out.println("Tipo de recurso seleccionado:" + tipoRecurso);
+
+
+
+        return;
     }
 
     static HttpRequest requestValido(String input){
@@ -36,7 +46,7 @@ public class Main {
             String protocolo = url.getScheme();
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(url)
-                    .method("HEAD", HttpRequest.BodyPublishers.noBody())
+                    .GET()
                     .build();
 
             HttpClient.newHttpClient()
@@ -53,4 +63,5 @@ public class Main {
             return null;
         }
     }
+
 }
