@@ -17,7 +17,16 @@ import static java.lang.System.out;
 
 public class Main {
     static void main() throws IOException, InterruptedException {
+        Thread serverThread = new Thread(Server::server);
+        serverThread.setDaemon(true);
+        serverThread.start();
 
+        Thread.sleep(3000);
+
+        cliente();
+    }
+
+    static void cliente() throws IOException, InterruptedException {
         Scanner scanner = new Scanner(in);
         String input;
         HttpRequest request;
@@ -43,6 +52,15 @@ public class Main {
         if (tipoRecurso.contains("html")){
             htmlInfo(response);
         }
+
+        char tecla;
+        do {
+            out.println("\n\n\n¿Quieres probar con otra URL? [S]i  [N]o: ");
+            tecla = scanner.next().charAt(0);
+            if (tecla == 's' || tecla == 'S')
+                cliente();
+        } while(!(tecla == 's'|| tecla == 'n' || tecla == 'S'|| tecla == 'N'));
+        System.exit(0);
     }
 
     static HttpRequest requestValido(String input){

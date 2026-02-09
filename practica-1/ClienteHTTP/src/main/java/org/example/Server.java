@@ -4,7 +4,10 @@ import io.javalin.Javalin;
 
 public class Server {
     static void server() {
-        var app = Javalin.create().start(7070);
+        var app = Javalin.create(config -> {
+            config.showJavalinBanner = false; // Oculta el banner de Javalin
+        }).start(7070);
+
         app.post("/postEncontrado", ctx -> {
             String matricula = ctx.header("matricula-id");
             String asignatura = ctx.formParam("asignatura");
