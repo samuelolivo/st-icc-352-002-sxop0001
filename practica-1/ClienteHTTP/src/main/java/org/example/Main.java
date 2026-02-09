@@ -17,12 +17,6 @@ import static java.lang.System.out;
 
 public class Main {
     static void main() throws IOException, InterruptedException {
-        Thread serverThread = new Thread(Server::server);
-        serverThread.setDaemon(true);
-        serverThread.start();
-
-        Thread.sleep(3000);
-
         cliente();
     }
 
@@ -89,7 +83,8 @@ public class Main {
 
     static void htmlInfo(HttpResponse<String> response) throws IOException, InterruptedException {
         String html = response.body();
-        Document document = Jsoup.parse(html, response.uri().toString());
+        URI uri = response.uri();
+        Document document = Jsoup.parse(html, uri.toString());
 
         out.println("Cantidad de...");
 
@@ -119,27 +114,29 @@ public class Main {
         for (Element f : forms) {
             cont++;
 
-            System.out.println("\n\n\nAtributos del form " + cont + ": ");
+            System.out.println("\n\n\nForm " + cont + ": ");
             f.attributes().forEach(attr -> System.out.print(attr.getKey() + "=" + attr.getValue() + "     "));
 
             inputs = f.select("input");
-            System.out.println("\n\nInputs del form: ");
+            System.out.println("\nInputs: ");
             for (Element i : inputs){
                 i.attributes().forEach(attr -> System.out.println(attr.getKey() + "=" + attr.getValue()));
             }
 
             if (f.attr("method").equalsIgnoreCase("post")){
-                String postEncontrado = "http://localhost:7070/postEncontrado";
 
                 HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create(postEncontrado))
+                        .uri(URI.create(f.absUrl("action")))
                         .header("matricula-id", "10154465")
                         .header("Content-Type", "application/x-www-form-urlencoded")
                         .POST(HttpRequest.BodyPublishers.ofString("asignatura=practica1"))
                         .build();
 
                 HttpClient client = HttpClient.newHttpClient();
-                client.send(request, HttpResponse.BodyHandlers.ofString());
+                HttpResponse<String> responsePOST = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+                out.println("\nRespuesta: ");
+                out.println(responsePOST.toString());
             }
         }
     }
