@@ -2,6 +2,7 @@ package org.example;
 
 import io.javalin.Javalin;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -12,21 +13,24 @@ import static java.lang.System.in;
 import static java.lang.System.out;
 
 public class Main {
-    static void main() {
+    static void main() throws IOException, InterruptedException {
        //var app = Javalin.create().start(7070);
 
         Scanner scanner = new Scanner(in);
         String input;
-        URI url;
+        HttpRequest request;
 
+        //Para capturar URL
         do {
             out.print("Ingrese URL válida: ");
             input = scanner.nextLine();
-            url = urlValida(input);
-        } while (url == null);
+            request = requestValido(input);
+        } while (request == null);
+
+
     }
 
-    static URI urlValida(String input){
+    static HttpRequest requestValido(String input){
         try {
             URI url = URI.create(input);
             String protocolo = url.getScheme();
@@ -43,7 +47,7 @@ public class Main {
                 return null;
             }
 
-            return url;
+            return request;
         } catch (Exception e) {
             out.println("Error: No se pudo accesar a la URL proporcionada.");
             return null;
