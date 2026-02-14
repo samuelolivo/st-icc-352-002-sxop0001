@@ -52,9 +52,7 @@ public class Main {
             String password = ctx.formParam("password");
 
             if ("admin".equals(usuario) && "admin".equals(password)) {
-                Usuario user = new Usuario();
-                user.setUsuario(usuario);
-                user.setRol(RolesUsuario.ADMIN);
+                Usuario user = new Usuario(usuario, password, RolesUsuario.ADMIN);
                 ctx.sessionAttribute(KeySession.USUARIO.name(), user);
                 ctx.redirect("/admin/CRUD");
             } else {

@@ -3,11 +3,21 @@ package org.example.models;
 import java.math.BigDecimal;
 
 public class Producto {
-    private static int count;
+    private static int count = 0;
     private int id;
     private String nombre;
     private BigDecimal precio;
     private EstadoObjeto estado;
+
+    public Producto(String nombre, BigDecimal precio) {
+        this.id = getCount();
+        this.nombre = nombre;
+        this.precio = precio;
+        this.estado = EstadoObjeto.ACTIVO;
+
+        setCount(1 + getCount());
+    }
+
     public static int getCount() {
         return count;
     }

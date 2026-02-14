@@ -11,6 +11,16 @@ public class Venta {
     private ArrayList<Producto> listaProducto;
     private EstadoObjeto estado;
 
+    public Venta(Date fecha, String userCliente, EstadoObjeto estado) {
+        this.id = getCount();
+        this.fecha = fecha;
+        this.userCliente = userCliente;
+        this.listaProducto = new ArrayList<Producto>();
+        this.estado = estado;
+
+        setCount(1 + getCount());
+    }
+
     public static long getCount() {
         return count;
     }
@@ -41,6 +51,14 @@ public class Venta {
 
     public void setUserCliente(String userCliente) {
         this.userCliente = userCliente;
+    }
+
+    public ArrayList<Producto> getListaProducto() {
+        return listaProducto;
+    }
+
+    public void setListaProducto(ArrayList<Producto> listaProducto) {
+        this.listaProducto = listaProducto;
     }
 
     public EstadoObjeto getEstado() {

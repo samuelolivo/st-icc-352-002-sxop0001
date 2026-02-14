@@ -8,6 +8,16 @@ public class Usuario {
     private RolesUsuario rol;
     private EstadoObjeto estado;
 
+    public Usuario(String usuario, String password, RolesUsuario rol) {
+        this.id = getCount();
+        this.usuario = usuario;
+        this.password = password;
+        this.rol = rol;
+        this.estado = EstadoObjeto.ACTIVO;
+
+        setCount(1 + getCount());
+    }
+
     public static int getCount() {
         return count;
     }
