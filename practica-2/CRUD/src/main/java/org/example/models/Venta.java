@@ -4,10 +4,19 @@ import java.util.ArrayList;
 import java.util.Date;
 
 public class Venta {
+    private static long count;
     private long id;
     private Date fecha;
     private String userCliente;
     private ArrayList<Producto> listaProducto;
+
+    public static long getCount() {
+        return count;
+    }
+
+    public static void setCount(long count) {
+        Venta.count = count;
+    }
 
     public long getId() {
         return id;

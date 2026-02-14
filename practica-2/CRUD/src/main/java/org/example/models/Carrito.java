@@ -3,8 +3,10 @@ package org.example.models;
 import java.util.ArrayList;
 
 public class Carrito {
+    private static long count;
     private long id;
     private ArrayList<Producto> listaProducto;
+    private Usuario usuario;
 
     public long getId() {
         return id;
@@ -18,7 +20,19 @@ public class Carrito {
         return listaProducto;
     }
 
-    public void setListaProducto(ArrayList<Producto> listaProducto) {
-        this.listaProducto = listaProducto;
+    public Usuario getUsuario() {
+        return usuario;
+    }
+
+    public void setUsuario(Usuario usuario) {
+        this.usuario = usuario;
+    }
+
+    public static long getCount() {
+        return count;
+    }
+
+    public static void setCount(long count) {
+        Carrito.count = count;
     }
 }

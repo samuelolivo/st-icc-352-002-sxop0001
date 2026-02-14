@@ -1,9 +1,27 @@
 package org.example.models;
 
 public class Usuario {
+    private static int count;
+    private int id;
     private String usuario;
     private String password;
     private RolesUsuario rol;
+
+    public static int getCount() {
+        return count;
+    }
+
+    public static void setCount(int count) {
+        Usuario.count = count;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
 
     public String getUsuario() {
         return usuario;
