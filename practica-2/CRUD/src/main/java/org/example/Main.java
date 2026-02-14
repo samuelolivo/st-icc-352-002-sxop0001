@@ -2,10 +2,9 @@ package org.example;
 
 import io.javalin.Javalin;
 import io.javalin.http.staticfiles.Location;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
+import io.javalin.rendering.template.JavalinThymeleaf;
+import org.example.models.RolesUsuario;
+import org.example.models.Usuario;
 
 import java.io.IOException;
 import java.net.URI;
@@ -29,5 +28,14 @@ public class Main {
             });
             config.fileRenderer(new JavalinThymeleaf());
         }).start(7070);
+
+        app.before("/admin/*", ctx -> {
+            Usuario usuario = ctx.sessionAttribute("usuario");
+
+            if (usuario == null || usuario.getRol() != RolesUsuario.ADMIN) {
+                ctx.status(401).result("Acceso denegado: Se requiere rol de administrador para acceder.");
+            }
+        });
     }
+
 }
