@@ -6,6 +6,7 @@ import org.example.models.Producto;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 
+
 public class ServicioProducto {
 
     private ArrayList<Producto> listaProductos;
@@ -14,9 +15,10 @@ public class ServicioProducto {
         listaProductos = new ArrayList<Producto>();
     }
 
-    public Producto crear(String nombre, BigDecimal precio) {
+    public Producto crear(String nombre, BigDecimal precio, int cantidad) {
 
-        Producto producto = new Producto(nombre, precio);
+        Producto producto = new Producto(nombre, precio,cantidad);
+
         listaProductos.add(producto);
 
         return producto;
@@ -44,13 +46,14 @@ public class ServicioProducto {
         return null;
     }
 
-    public boolean modificarPorId(int id, String nuevoNombre, BigDecimal nuevoPrecio) {
+    public boolean modificarPorId(int id, String nuevoNombre, BigDecimal nuevoPrecio, int nuevaCantidad) {
 
         Producto producto = buscarPorId(id);
 
         if (producto != null && producto.getEstado() == EstadoObjeto.ACTIVO) {
             producto.setNombre(nuevoNombre);
             producto.setPrecio(nuevoPrecio);
+            producto.setCantidad(nuevaCantidad);
 
             return true;
         }
