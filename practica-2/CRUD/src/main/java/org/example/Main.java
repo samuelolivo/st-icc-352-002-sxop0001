@@ -19,6 +19,15 @@ import static java.lang.System.out;
 
 public class Main {
     public static void main(String[] args) {
-
+        var app = Javalin.create(config -> {
+            config.staticFiles.add(staticFiles -> {
+                staticFiles.hostedPath = "/";
+                staticFiles.directory = "/public";
+                staticFiles.location = Location.CLASSPATH;
+                staticFiles.precompress=false;
+                staticFiles.aliasCheck=null;
+            });
+            config.fileRenderer(new JavalinThymeleaf());
+        }).start(7070);
     }
 }
