@@ -17,11 +17,15 @@ import static java.lang.System.in;
 import static java.lang.System.out;
 
 public class Main {
+    static enum KeySession{
+        USUARIO
+    }
+
     public static void main(String[] args) {
         var app = Javalin.create(config -> {
             config.staticFiles.add(staticFiles -> {
                 staticFiles.hostedPath = "/";
-                staticFiles.directory = "/public";
+                staticFiles.directory = "/templates";
                 staticFiles.location = Location.CLASSPATH;
                 staticFiles.precompress=false;
                 staticFiles.aliasCheck=null;
@@ -29,13 +33,35 @@ public class Main {
             config.fileRenderer(new JavalinThymeleaf());
         }).start(7070);
 
-        app.before("/admin/*", ctx -> {
-            Usuario usuario = ctx.sessionAttribute("usuario");
+        app.before("/**", ctx -> {
+            System.out.println(ctx.path());
 
-            if (usuario == null || usuario.getRol() != RolesUsuario.ADMIN) {
-                ctx.status(401).result("Acceso denegado: Se requiere rol de administrador para acceder.");
+            if(ctx.path().startsWith("/login.html") ||
+                    ctx.path().startsWith("/procesarLogin")
+                    ){
+                return;
+            }
+            Usuario usuario = ctx.sessionAttribute(KeySession.USUARIO.name());
+            if(usuario == null){
+                ctx.redirect("/login.html");
+            }
+        });
+
+        app.post("/procesarLogin", ctx -> {
+            String usuario = ctx.formParam("usuario");
+            String password = ctx.formParam("password");
+
+            if ("admin".equals(usuario) && "admin".equals(password)) {
+                Usuario user = new Usuario();
+                user.setUsuario(usuario);
+                user.setRol(RolesUsuario.ADMIN);
+                ctx.sessionAttribute(KeySession.USUARIO.name(), user);
+                ctx.redirect("/admin/CRUD");
+            } else {
+                ctx.status(401).result("Usuario incorrecto, ingrese un usuario valido.");
             }
         });
     }
+
 
 }

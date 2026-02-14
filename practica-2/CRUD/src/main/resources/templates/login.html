@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Acceso al Sistema</title>
+    <link rel="stylesheet">
+</head>
+<body>
+<div class="login-container">
+    <div class="status">Autenticación Requerida</div>
+    <h1>Ingresar</h1>
+    <form action="/procesarLogin" method="post">
+        <div class="form-group">
+            <label>Usuario</label>
+            <input type="text" name="usuario" required>
+        </div>
+        <div class="form-group">
+            <label>Contraseña</label>
+            <input type="password" name="password" required>
+        </div>
+        <input type="submit" value="Continuar">
+    </form>
+</div>
+</body>
+</html>

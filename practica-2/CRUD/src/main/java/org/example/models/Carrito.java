@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 public class Carrito {
     private long id;
-    private ArrayList<Producto> listaProducto
+    private ArrayList<Producto> listaProducto;
 
     public long getId() {
         return id;

@@ -1,12 +1,13 @@
 package org.example.models;
 
+import java.util.ArrayList;
 import java.util.Date;
 
 public class Venta {
     private long id;
     private Date fecha;
     private String userCliente;
-    private ArrayList <Producto>;
+    private ArrayList<Producto> listaProducto;
 
     public long getId() {
         return id;
