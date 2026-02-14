@@ -7,6 +7,7 @@ public class Producto {
     private int id;
     private String nombre;
     private BigDecimal precio;
+    private EstadoObjeto estado;
     public static int getCount() {
         return count;
     }
@@ -37,5 +38,13 @@ public class Producto {
 
     public void setPrecio(BigDecimal precio) {
         this.precio = precio;
+    }
+
+    public EstadoObjeto getEstado() {
+        return estado;
+    }
+
+    public void setEstado(EstadoObjeto estado) {
+        this.estado = estado;
     }
 }

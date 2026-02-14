@@ -7,6 +7,7 @@ public class Carrito {
     private long id;
     private ArrayList<Producto> listaProducto;
     private Usuario usuario;
+    private EstadoObjeto estado;
 
     public long getId() {
         return id;
@@ -34,5 +35,13 @@ public class Carrito {
 
     public static void setCount(long count) {
         Carrito.count = count;
+    }
+
+    public EstadoObjeto getEstado() {
+        return estado;
+    }
+
+    public void setEstado(EstadoObjeto estado) {
+        this.estado = estado;
     }
 }

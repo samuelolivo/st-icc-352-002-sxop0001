@@ -6,6 +6,7 @@ public class Usuario {
     private String usuario;
     private String password;
     private RolesUsuario rol;
+    private EstadoObjeto estado;
 
     public static int getCount() {
         return count;
@@ -45,5 +46,13 @@ public class Usuario {
 
     public void setRol(RolesUsuario rol) {
         this.rol = rol;
+    }
+
+    public EstadoObjeto getEstado() {
+        return estado;
+    }
+
+    public void setEstado(EstadoObjeto estado) {
+        this.estado = estado;
     }
 }

@@ -9,6 +9,7 @@ public class Venta {
     private Date fecha;
     private String userCliente;
     private ArrayList<Producto> listaProducto;
+    private EstadoObjeto estado;
 
     public static long getCount() {
         return count;
@@ -40,5 +41,13 @@ public class Venta {
 
     public void setUserCliente(String userCliente) {
         this.userCliente = userCliente;
+    }
+
+    public EstadoObjeto getEstado() {
+        return estado;
+    }
+
+    public void setEstado(EstadoObjeto estado) {
+        this.estado = estado;
     }
 }
