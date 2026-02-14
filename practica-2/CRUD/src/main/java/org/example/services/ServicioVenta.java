@@ -1,0 +1,56 @@
+package org.example.services;
+
+import org.example.models.EstadoObjeto;
+import org.example.models.Producto;
+import org.example.models.Venta;
+
+import java.util.ArrayList;
+import java.util.Date;
+
+public class ServicioVenta {
+
+    private ArrayList<Venta> listaVentas;
+
+    public ServicioVenta() {
+        listaVentas = new ArrayList<>();
+    }
+
+    public Venta registrar(String userCliente, ArrayList<Producto> productos) {
+
+        Venta venta = new Venta(
+                new Date(),
+                userCliente
+        );
+
+        venta.setListaProducto(new ArrayList<>(productos));
+        listaVentas.add(venta);
+
+        return venta;
+    }
+
+
+    public Venta buscarPorId(long id) {
+        for (Venta venta : listaVentas) {
+            if (venta.getId() == id) {
+                return venta;
+            }
+        }
+
+        return null;
+    }
+
+    public ArrayList<Venta> listarTodas() {
+        return new ArrayList<>(listaVentas);
+    }
+
+    public ArrayList<Venta> listarPorCliente(String userCliente) {
+        ArrayList<Venta> resultado = new ArrayList<>();
+        for (Venta venta : listaVentas) {
+            if (venta.getUserCliente().equals(userCliente)) {
+                resultado.add(venta);
+            }
+        }
+
+        return resultado;
+    }
+}
