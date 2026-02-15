@@ -12,6 +12,7 @@ public class ServicioUsuario {
 
     public ServicioUsuario() {
         listaUsuarios = new ArrayList<>();
+        crear("", "", RolesUsuario.NO_AUTENTICADO);
         crear("admin", "admin", RolesUsuario.ADMIN);
     }
 
@@ -88,15 +89,34 @@ public class ServicioUsuario {
         return false;
     }
 
+    public boolean borrarPorUsername(String username) {
+        Usuario usuario = buscarPorUsername(username);
+
+        if (usuario != null && usuario.getEstado() == EstadoObjeto.ACTIVO) {
+            usuario.setEstado(EstadoObjeto.INACTIVO);
+            return true;
+        }
+
+        return false;
+    }
+
     public ArrayList<Usuario> listarTodos() {
-        return new ArrayList<>(listaUsuarios);
+        ArrayList<Usuario> todos = new ArrayList<>();
+
+        for (Usuario usuario : listaUsuarios) {
+            if (usuario.getRol() != RolesUsuario.NO_AUTENTICADO) {
+                todos.add(usuario);
+            }
+        }
+
+        return todos;
     }
 
     public ArrayList<Usuario> listarActivos() {
         ArrayList<Usuario> activos = new ArrayList<>();
 
         for (Usuario usuario : listaUsuarios) {
-            if (usuario.getEstado() == EstadoObjeto.ACTIVO) {
+            if (usuario.getEstado() == EstadoObjeto.ACTIVO && usuario.getRol() != RolesUsuario.NO_AUTENTICADO) {
                 activos.add(usuario);
             }
         }

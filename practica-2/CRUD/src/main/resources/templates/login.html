@@ -1,25 +1,76 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Acceso al Sistema</title>
-    <link rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso al Sistema - PUCMM</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f4f7f6;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-card {
+            width: 100%;
+            max-width: 400px;
+            padding: 2rem;
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            background: white;
+        }
+        .btn-primary {
+            background-color: #0d6efd;
+            border: none;
+            padding: 0.8rem;
+            font-weight: bold;
+        }
+        .status-badge {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #6c757d;
+            margin-bottom: 0.5rem;
+            display: block;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
-<div class="login-container">
-    <div class="status">Autenticación Requerida</div>
-    <h1>Ingresar</h1>
+
+<div class="login-card">
+    <span class="status-badge">Autenticación Requerida</span>
+    <h1 class="text-center fw-bold mb-4">Ingresar</h1>
+
+    <div th:if="${param.error}" class="alert alert-danger py-2" role="alert">
+        <small>Usuario o contraseña incorrectos</small>
+    </div>
+
     <form action="/procesarLogin" method="post">
-        <div class="form-group">
-            <label>Usuario</label>
-            <input type="text" name="usuario" required>
+        <div class="mb-3">
+            <label class="form-label fw-semibold">Usuario</label>
+            <input type="text" name="usuario" class="form-control form-control-lg"
+                   [cite_start]placeholder="Ej: admin" required>
         </div>
-        <div class="form-group">
-            <label>Contraseña</label>
-            <input type="password" name="password" required>
+
+        <div class="mb-4">
+            <label class="form-label fw-semibold">Contraseña</label>
+            <input type="password" name="password" class="form-control form-control-lg"
+                   [cite_start]placeholder="••••••••" required>
         </div>
-        <input type="submit" value="Continuar">
+
+        <div class="d-grid">
+            <button type="submit" class="btn btn-primary btn-lg">Continuar</button>
+        </div>
     </form>
+
+    <div class="text-center mt-4">
+        <a href="/volver" class="text-decoration-none text-muted small">← Volver</a>
+    </div>
 </div>
+
 </body>
 </html>

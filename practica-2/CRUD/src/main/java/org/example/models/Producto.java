@@ -11,13 +11,13 @@ public class Producto {
     private EstadoObjeto estado;
 
     public Producto(String nombre, BigDecimal precio, int cantidad) {
-        this.id = ++count;
+        this.id = getCount();
         this.nombre = nombre;
         this.precio = precio;
         this.estado = EstadoObjeto.ACTIVO;
         this.cantidad = cantidad;
 
-
+        setCount(1 + getCount());
     }
 
     public static int getCount() {
@@ -63,6 +63,7 @@ public class Producto {
     public void setCantidad(int cantidad) {
         this.cantidad = cantidad;
     }
+
     public int getCantidad() {
         return cantidad;
     }
