@@ -7,7 +7,9 @@ import org.example.models.Producto;
 import org.example.models.RolesUsuario;
 import org.example.models.Usuario;
 import org.example.models.Venta;
+import org.example.services.ServicioCarrito;
 import org.example.services.ServicioProducto;
+import org.example.services.ServicioVenta;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -15,12 +17,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static java.lang.Thread.sleep;
+
 public class Main {
     static enum KeySession {
         USUARIO
     }
 
     public static ServicioProducto servicioProducto = new ServicioProducto();
+    public static ServicioCarrito servicioCarrito = new ServicioCarrito();
+    public static ServicioVenta servicioVenta = new ServicioVenta();
 
 
     public static void main(String[] args) {
@@ -35,14 +41,15 @@ public class Main {
             config.fileRenderer(new JavalinThymeleaf());
         }).start(7070);
 
-        // Mantenemos tu filtro tal cual lo pediste
+
         app.before("/**", ctx -> {
             System.out.println(ctx.path());
 
             if (ctx.path().startsWith("/login.html") ||
                     ctx.path().startsWith("/procesarLogin") ||
                     ctx.path().startsWith("/productos") ||
-                    ctx.path().startsWith("/productos/admin/"))
+                    ctx.path().startsWith("/productos/admin/") ||
+                    ctx.path().startsWith("/carrito/"))
                     {
                 return;
             }
@@ -92,10 +99,10 @@ public class Main {
             }
             ctx.redirect("/productos");
         });
-        // --- ELIMINAR ---
+
         app.get("/admin/eliminarProducto/{id}", ctx -> {
             int id = Integer.parseInt(ctx.pathParam("id"));
-            Main.servicioProducto.borrarPorId(id); // Usa tu lógica de pasar a INACTIVO
+            Main.servicioProducto.borrarPorId(id);
             ctx.redirect("/productos");
         });
 
@@ -122,5 +129,97 @@ public class Main {
             Main.servicioProducto.modificarPorId(id, nombre, precio, cantidad);
             ctx.redirect("/productos");
         });
+
+        app.get("/carrito/agregar/{id}", ctx -> {
+            int idProducto = Integer.parseInt(ctx.pathParam("id"));
+            Producto producto = servicioProducto.buscarActivoPorId(idProducto);
+            Usuario usuario = ctx.sessionAttribute(KeySession.USUARIO.name());
+
+
+            if (producto != null && producto.getCantidad() > 0) {
+                if (servicioCarrito.buscarPorId(usuario.getId()) == null) {
+                    servicioCarrito.crear(usuario);
+                }
+
+                servicioCarrito.agregarProducto(usuario.getId(), producto);
+                ctx.redirect("/productos");
+            } else {
+                ctx.result("Lo sentimos, no hay stock suficiente de este producto.");
+            }
+        });
+
+
+        app.get("/carrito", ctx -> {
+            Usuario usuario = ctx.sessionAttribute(KeySession.USUARIO.name());
+            ArrayList<Producto> productosCarrito = servicioCarrito.listarProductos(usuario.getId());
+
+            if (productosCarrito == null) productosCarrito = new ArrayList<>();
+
+            BigDecimal total = productosCarrito.stream()
+                    .map(Producto::getPrecio)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            String error = ctx.sessionAttribute("errorStock");
+            ctx.consumeSessionAttribute("errorStock");
+
+            Map<String, Object> model = new HashMap<>();
+            model.put("productos", productosCarrito);
+            model.put("total", total);
+            model.put("usuario", usuario);
+            model.put("mensajeError", error);
+
+            ctx.render("templates/carrito.html", model);
+        });
+
+
+        app.get("/carrito/eliminar/{id}", ctx -> {
+            long idProd = Long.parseLong(ctx.pathParam("id"));
+            Usuario usuario = ctx.sessionAttribute(KeySession.USUARIO.name());
+            servicioCarrito.eliminarProducto(usuario.getId(), idProd);
+            ctx.redirect("/carrito");
+        });
+
+        app.post("/carrito/procesar", ctx -> {
+            Usuario usuario = ctx.sessionAttribute(KeySession.USUARIO.name());
+            String nombreCliente = ctx.formParam("nombreCliente");
+            ArrayList<Producto> enCarrito = servicioCarrito.listarProductos(usuario.getId());
+
+            if (enCarrito == null || enCarrito.isEmpty()) {
+                ctx.redirect("/carrito");
+                return;
+            }
+            for (Producto item : enCarrito) {
+                long cantidadPedida = enCarrito.stream()
+                        .filter(p -> p.getId() == item.getId()).count();
+
+                Producto stockReal = servicioProducto.buscarActivoPorId((int) item.getId());
+
+                if (stockReal == null || cantidadPedida > stockReal.getCantidad()) {
+                    int disponibles = (stockReal != null) ? stockReal.getCantidad() : 0;
+                    ctx.sessionAttribute("errorStock", "No hay suficiente stock para '" + item.getNombre() +
+                            "'. Quedan " + disponibles + ".");
+
+                    ctx.redirect("/carrito");
+                    return;
+                }
+            }
+
+            for (Producto item : enCarrito) {
+                Producto stockReal = servicioProducto.buscarActivoPorId((int) item.getId());
+                servicioProducto.modificarPorId(
+                        (int)item.getId(),
+                        stockReal.getNombre(),
+                        stockReal.getPrecio(),
+                        stockReal.getCantidad() - 1
+                );
+            }
+
+
+            servicioVenta.registrar(nombreCliente, enCarrito);
+            servicioCarrito.vaciarCarrito(usuario.getId());
+
+            ctx.redirect("/productos");
+        });
     }
+
 }
