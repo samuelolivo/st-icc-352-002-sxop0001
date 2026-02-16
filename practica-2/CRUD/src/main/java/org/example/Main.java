@@ -119,8 +119,17 @@ public class Main {
             Usuario usuarioLogueado = ctx.sessionAttribute(KeySession.USUARIO.name());
             Map<String, Object> model = new HashMap<>();
 
+            int cantidadCarrito = 0;
+            if (usuarioLogueado != null) {
+                ArrayList<Producto> lista = servicioCarrito.listarProductos(usuarioLogueado.getId());
+                if (lista != null) {
+                    cantidadCarrito = lista.size();
+                }
+            }
+
             model.put("productos", servicioProducto.listarActivos());
             model.put("usuario", usuarioLogueado);
+            model.put("cantidadCarrito", cantidadCarrito);
             ctx.sessionAttribute(KeySession.REFERER.name(), "/productos");
             ctx.render("templates/productos.html", model);
         });
@@ -195,8 +204,6 @@ public class Main {
         app.get("/carrito", ctx -> {
             Usuario usuario = ctx.sessionAttribute(KeySession.USUARIO.name());
             ArrayList<Producto> productosCarrito = servicioCarrito.listarProductos(usuario.getId());
-            String anteriorPath = ctx.header("Referer");
-            ctx.sessionAttribute(KeySession.REFERER.name(), anteriorPath);
 
             if (productosCarrito == null) productosCarrito = new ArrayList<>();
 
@@ -224,6 +231,19 @@ public class Main {
             ctx.redirect("/carrito");
         });
 
+        app.get("/carrito/vaciar", ctx -> {
+            Usuario usuario = ctx.sessionAttribute(KeySession.USUARIO.name());
+            String nombreCliente = ctx.formParam("nombreCliente");
+            ArrayList<Producto> enCarrito = servicioCarrito.listarProductos(usuario.getId());
+
+            if (enCarrito == null || enCarrito.isEmpty()) {
+                ctx.redirect("/carrito");
+                return;
+            }
+
+            servicioCarrito.vaciarCarrito(usuario.getId());
+            ctx.redirect("/carrito");
+        });
         app.post("/carrito/procesar", ctx -> {
             Usuario usuario = ctx.sessionAttribute(KeySession.USUARIO.name());
             String nombreCliente = ctx.formParam("nombreCliente");
@@ -271,8 +291,17 @@ public class Main {
 
             Map<String, Object> model = new HashMap<>();
 
+            int cantidadCarrito = 0;
+            if (usuarioLogueado != null) {
+                ArrayList<Producto> lista = servicioCarrito.listarProductos(usuarioLogueado.getId());
+                if (lista != null) {
+                    cantidadCarrito = lista.size();
+                }
+            }
+
             model.put("usuarios", servicioUsuario.listarActivos());
             model.put("usuario", usuarioLogueado);
+            model.put("cantidadCarrito", cantidadCarrito);
             ctx.sessionAttribute(KeySession.REFERER.name(), "/usuarios");
             ctx.render("templates/usuarios.html", model);
         });

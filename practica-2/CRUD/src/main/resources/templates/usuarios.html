@@ -24,10 +24,15 @@
     </div>
 
     <div class="d-flex justify-content-end align-items-center gap-2">
-        <div>
-            <a href="/productos" class="btn btn-secondary px-4 text-white fw-bold">Productos</a>
-            <a href="/carrito" class="btn btn-secondary px-4 text-white fw-bold">Carrito</a>
-            <a th:if="${usuario != null && usuario.rol.name() == 'ADMIN'}" href="/admin/ventas" class="btn btn-secondary px-4 text-white fw-bold">Ventas Realizadas</a>
+        <div class="d-flex justify-content-end align-items-center gap-2">
+            <a href="/productos" class="btn btn-secondary text-white fw-bold">Productos</a>
+            <a href="/carrito" class="btn btn-secondary text-white fw-bold d-inline-flex align-items-center gap-2">
+                <span>Carrito</span>
+
+                <span class="badge rounded-pill bg-light text-dark shadow-sm"
+                      th:text="${cantidadCarrito}">0</span>
+            </a>
+            <a th:if="${usuario != null && usuario.rol.name() == 'ADMIN'}" href="/admin/ventas" class="btn btn-secondary text-white fw-bold">Ventas Realizadas</a>
         </div>
 
         <div th:if="${usuario == null or usuario.rol.name() == 'NO_AUTENTICADO'}">
