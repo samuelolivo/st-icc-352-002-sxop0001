@@ -1,5 +1,6 @@
 package org.example.models;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -57,5 +58,17 @@ public class Venta {
 
     public void setListaProducto(ArrayList<Producto> listaProducto) {
         this.listaProducto = listaProducto;
+    }
+
+    public BigDecimal getTotalVenta() {
+        BigDecimal total = BigDecimal.ZERO; //
+        for (Producto p : listaProducto) { //
+
+            BigDecimal cantidadBD = new BigDecimal(p.getCantidad());
+            BigDecimal subtotal = p.getPrecio().multiply(cantidadBD);
+            total = total.add(subtotal); //
+        }
+
+        return total;
     }
 }

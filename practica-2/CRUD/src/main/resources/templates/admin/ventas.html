@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <title>Historial de Ventas</title>
+  <style>
+    body {
+      background-color: #f8f9fa;
+      padding-bottom: 50px;
+    }
+    .invoice-card {
+      background: white;
+      border: 1px solid #dee2e6;
+      padding: 30px;
+      margin-bottom: 40px;
+      border-radius: 8px;
+    }
+    .invoice-title {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      border-bottom: 2px solid #212529;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+    .table-invoice {
+      border: 1px solid #dee2e6;
+    }
+    .table-invoice thead {
+      background-color: #f1f3f5;
+    }
+    .total-row {
+      font-size: 1.1rem;
+      background-color: #f8f9fa;
+    }
+  </style>
+</head>
+<body class="container mt-5">
+
+<div class="col-md-6">
+  <h1 class="fw-bold text-dark m-0">Historial de Ventas</h1>
+  <p class="text-muted">Visualización de todas las compras realizadas en el sistema.</p>
+  <a href="/volver" class="btn btn-outline-secondary">Volver</a>
+</div>
+
+<div th:each="v : ${ventas}" class="invoice-card shadow-sm">
+
+  <div class="invoice-title d-flex justify-content-between align-items-center">
+    <h3 class="m-0 fw-bold">
+      <span th:text="${v.userCliente}">Nombre del Cliente</span> —
+      <span th:text="${#dates.format(v.fecha, 'dd/MM/yyyy')}">Fecha</span>
+    </h3>
+    <span class="badge bg-dark" th:text="${'ID: #' + v.id}">ID</span>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-invoice align-middle mb-0">
+      <thead>
+      <tr class="text-center">
+        <th class="text-start ps-4 py-3">Producto</th>
+        <th>Precio Unitario ($)</th>
+        <th>Cantidad</th>
+        <th class="text-end pe-4">Subtotal ($)</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="p : ${v.listaProducto}">
+        <td class="ps-4 fw-semibold" th:text="${p.nombre}">Producto</td>
+        <td class="text-center" th:text="${p.precio}">0.00</td>
+        <td class="text-center">
+          <span class="badge bg-light text-dark border" th:text="${p.cantidad}">1</span>
+        </td>
+        <td class="text-end pe-4 fw-bold"
+            th:text="${p.precio * p.cantidad}">0.00</td>
+      </tr>
+      </tbody>
+      <tfoot>
+      <tr class="total-row">
+        <td colspan="3" class="text-end fw-bold py-3">Total de la Compra:</td>
+        <td class="text-end pe-4 fw-bold text-primary py-3"
+            th:text="${'$ ' + v.getTotalVenta()}">0.00</td>
+      </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+
+<div th:if="${#lists.isEmpty(ventas)}" class="text-center py-5">
+  <div class="card p-5 border-dashed">
+    <h4 class="text-muted">No se han registrado compras aún.</h4>
+    <p>Las ventas aparecerán aquí una vez que los clientes procesen su carrito.</p>
+  </div>
+</div>
+
+</body>
+</html>

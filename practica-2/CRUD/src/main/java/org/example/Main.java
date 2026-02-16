@@ -358,6 +358,16 @@ public class Main {
             ctx.redirect("/usuarios");
 
         });
+
+        app.get("/admin/ventas", ctx -> {
+            Usuario usuarioLogueado = ctx.sessionAttribute(KeySession.USUARIO.name());
+            Map<String, Object> model = new HashMap<>();
+
+            model.put("ventas", servicioVenta.listarTodas());
+            model.put("usuario", usuarioLogueado);
+
+            ctx.render("templates/admin/ventas.html", model);
+        });
     }
 
 }

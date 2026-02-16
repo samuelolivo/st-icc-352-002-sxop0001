@@ -23,10 +23,11 @@
         <h2 class="fw-bold text-dark">Listado de Usuarios</h2>
     </div>
 
-    <div class="col-md-6 d-flex justify-content-end align-items-center gap-2">
+    <div class="d-flex justify-content-end align-items-center gap-2">
         <div>
             <a href="/productos" class="btn btn-secondary px-4 text-white fw-bold">Productos</a>
             <a href="/carrito" class="btn btn-secondary px-4 text-white fw-bold">Carrito</a>
+            <a th:if="${usuario != null && usuario.rol.name() == 'ADMIN'}" href="/admin/ventas" class="btn btn-secondary px-4 text-white fw-bold">Ventas Realizadas</a>
         </div>
 
         <div th:if="${usuario == null or usuario.rol.name() == 'NO_AUTENTICADO'}">
