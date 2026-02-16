@@ -95,8 +95,11 @@ public class Main {
 
             if (usuario != null) {
                 ctx.sessionAttribute(KeySession.USUARIO.name(), usuario);
+
                 String anteriorPath = ctx.sessionAttribute(KeySession.REFERER.name());
                 ctx.redirect((anteriorPath != null) ? anteriorPath : "/productos");
+
+                servicioCarrito.mergeCarritoLogin(usuario);
             } else {
                 ctx.redirect("/login?error=1");
             }

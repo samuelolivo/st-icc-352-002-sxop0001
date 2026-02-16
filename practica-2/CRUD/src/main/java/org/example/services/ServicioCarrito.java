@@ -3,6 +3,7 @@ package org.example.services;
 import org.example.models.Carrito;
 import org.example.models.Producto;
 import org.example.models.Usuario;
+import org.example.Main;
 
 import java.util.ArrayList;
 
@@ -80,6 +81,25 @@ public class ServicioCarrito {
             return false;
         }
         carrito.getListaProducto().clear();
+        return true;
+    }
+
+    public boolean mergeCarritoLogin(Usuario usuario) {
+        Carrito carrito = buscarPorId(usuario.getId());
+        Carrito carritoUnir = buscarPorId(Main.servicioUsuario.buscarPorUsername("").getId());
+
+        if (carritoUnir == null)
+            return false;
+
+        if (carrito == null){
+            carrito = crear(usuario);
+        }
+
+        ArrayList<Producto> productosUnidos = carrito.getListaProducto();
+        productosUnidos.addAll(carritoUnir.getListaProducto());
+        carrito.setListaProducto(productosUnidos);
+        vaciarCarrito(carritoUnir.getId());
+
         return true;
     }
 
