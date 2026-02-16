@@ -1,7 +1,7 @@
 package org.example.models;
 
 public class Usuario {
-    private static int count;
+    private static int count = 0;
     private int id;
     private String usuario;
     private String password;
