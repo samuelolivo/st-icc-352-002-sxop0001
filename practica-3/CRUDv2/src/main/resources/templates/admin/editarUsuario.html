@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <title >Editar Usuario</title>
+</head>
+
+<body class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card shadow">
+        <div class="card-header bg-warning">
+          <h3 class="fw-bold">Editar Usuario</h3>
+        </div>
+
+        <div class="card-body">
+          <form action="/admin/actualizarUsuario" method="post">
+            <input type="hidden" name="id" th:value="${usuarioEditar.id}">
+
+            <div class="mb-3">
+              <label>Usuario</label>
+              <input type="text" name="usuario"
+                     class="form-control"
+                     th:value="${usuarioEditar.usuario}"
+                     required>
+            </div>
+
+            <div class="mb-3">
+              <label>Password</label>
+              <input type="text"
+                     name="password"
+                     class="form-control"
+                     th:value="${usuarioEditar.password}"
+                     required>
+            </div>
+
+            <div class="mb-3">
+              <label>Rol</label>
+              <select name="rol" class="form-control">
+                <option th:each="rol : ${roles}"
+                        th:value="${rol}"
+                        th:text="${rol.getDescripcion()}"
+                        th:selected="${rol == usuarioEditar.rol}">
+                </option>
+              </select>
+            </div>
+
+            <div class="d-flex justify-content-between">
+              <a href="/usuarios"
+                 class="btn btn-secondary">
+                 Cancelar
+              </a>
+
+              <button type="submit"
+                      class="btn btn-warning">
+                      Guardar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
