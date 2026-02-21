@@ -1,22 +1,14 @@
 package org.example;
 
 import io.javalin.Javalin;
-import io.javalin.http.ContentTooLargeResponse;
 import io.javalin.http.staticfiles.Location;
 import io.javalin.rendering.template.JavalinThymeleaf;
 import org.example.controllers.*;
-import org.example.models.Producto;
-import org.example.models.RolesUsuario;
-import org.example.models.Usuario;
+import org.example.services.BootStrapServices;
 import org.example.services.ServicioCarrito;
 import org.example.services.ServicioProducto;
 import org.example.services.ServicioUsuario;
 import org.example.services.ServicioVenta;
-
-import java.math.BigDecimal;
-import java.util.*;
-
-import static java.lang.Thread.sleep;
 
 public class Main {
 
@@ -30,18 +22,32 @@ public class Main {
     public static ServicioCarrito servicioCarrito = new ServicioCarrito();
     public static ServicioVenta servicioVenta = new ServicioVenta();
 
-
     public static void main(String[] args) {
+
+
+        BootStrapServices.startDb();
+        BootStrapServices.init();
+
+
         var app = Javalin.create(config -> {
             config.staticFiles.add(staticFiles -> {
                 staticFiles.hostedPath = "/";
                 staticFiles.directory = "/templates";
                 staticFiles.location = Location.CLASSPATH;
                 staticFiles.precompress = false;
-                staticFiles.aliasCheck = null;
             });
+
             config.fileRenderer(new JavalinThymeleaf());
-        }).start(7070);
+        });
+
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("Deteniendo servidor y cerrando base de datos...");
+            BootStrapServices.stopDb();
+        }));
+
+
+        app.start(7070);
 
 
         app.before("/**", ControladorSesion::sesion);
@@ -50,11 +56,9 @@ public class Main {
         app.get("/volver", ControladorSesion::volver);
 
 
-
         app.get("/login", ControladorSesion::vistaLogin);
         app.post("/procesarLogin", ControladorSesion::procesarLogin);
         app.get("/logout", ControladorSesion::logout);
-
 
 
         app.get("/productos", ControladorProducto::vistaListar);
@@ -65,13 +69,11 @@ public class Main {
         app.post("/admin/actualizarProducto", ControladorProducto::modificar);
 
 
-
         app.get("/carrito", ControladorCarrito::vistaListar);
         app.get("/carrito/agregar/{id}", ControladorCarrito::agregar);
         app.get("/carrito/eliminar/{id}", ControladorCarrito::eliminar);
         app.get("/carrito/vaciar", ControladorCarrito::vaciar);
         app.post("/carrito/procesar", ControladorCarrito::procesar);
-
 
 
         app.get("/usuarios", ControladorUsuario::vistaListar);
@@ -82,8 +84,8 @@ public class Main {
         app.get("/admin/eliminarUsuario/{id}", ControladorUsuario::eliminar);
 
 
-
         app.get("/admin/ventas", ControladorVenta::vistaListar);
-    }
 
+
+    }
 }

@@ -1,9 +1,12 @@
 package org.example.controllers;
 
 import io.javalin.http.Context;
+import io.javalin.http.Cookie;
 import org.example.Main;
 import org.example.models.RolesUsuario;
 import org.example.models.Usuario;
+import org.example.services.ServicioLog; // Servicio JDBC
+import org.jasypt.util.text.BasicTextEncryptor;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,78 +15,97 @@ import static org.example.Main.servicioCarrito;
 import static org.example.Main.servicioUsuario;
 
 public class ControladorSesion {
-    public static void sesion(Context ctx){
-        System.out.println(ctx.path());
-        Usuario usuario = ctx.sessionAttribute(Main.KeySession.USUARIO.name());
-        Boolean check = ctx.sessionAttribute("primera_vez");
 
-        if (check == null) {
-            ctx.sessionAttribute(Main.KeySession.USUARIO.name(), servicioUsuario.buscarPorUsername(""));
-            ctx.sessionAttribute("primera_vez", true);
-            ctx.redirect("/productos");
-        }
-    }
+    private static final String COOKIE_NAME = "recuerdame";
+    private static final String CLAVE_ENCRIPCION = "mi-clave-secreta-123";
 
-    public static void adminValido(Context ctx){
-        Usuario usuario = ctx.sessionAttribute(Main.KeySession.USUARIO.name());
+    public static void sesion(Context ctx) {
+        Usuario usuarioSesion = ctx.sessionAttribute(Main.KeySession.USUARIO.name());
 
-        if (usuario == null || usuario.getRol() != RolesUsuario.ADMIN) {
-            String anteriorPath = ctx.header("Referer");
-            ctx.redirect((anteriorPath != null && !anteriorPath.isEmpty()) ? anteriorPath : "/productos");
-        }
-    }
 
-    public static void defaultPath(Context ctx){
-        ctx.redirect("/productos");
-    }
+        if (usuarioSesion == null || usuarioSesion.getRol() == RolesUsuario.NO_AUTENTICADO) {
+            String cookieValor = ctx.cookie(COOKIE_NAME);
+            if (cookieValor != null) {
+                try {
+                    BasicTextEncryptor textEncryptor = new BasicTextEncryptor();
+                    textEncryptor.setPassword(CLAVE_ENCRIPCION);
+                    String usuarioDesencriptado = textEncryptor.decrypt(cookieValor);
 
-    public static void volver(Context ctx){
-        String anteriorPath = ctx.sessionAttribute(Main.KeySession.REFERER.name());
-        ctx.redirect((anteriorPath != null && !anteriorPath.isEmpty()) ? anteriorPath : "/productos");
-    }
-
-    public static void vistaLogin(Context ctx){
-        Usuario usuario = ctx.sessionAttribute(Main.KeySession.USUARIO.name());
-        Map<String, Object> model = new HashMap<>();
-
-        String guardado = ctx.sessionAttribute(Main.KeySession.REFERER.name());
-        String actual = ctx.header("Referer");
-
-        if (guardado == null || guardado.isEmpty()) {
-            if (actual != null && !actual.contains("/login") && !actual.contains("/procesarLogin")) {
-                ctx.sessionAttribute(Main.KeySession.REFERER.name(), actual);
+                    Usuario u = servicioUsuario.buscarPorUsername(usuarioDesencriptado);
+                    if (u != null) {
+                        ctx.sessionAttribute(Main.KeySession.USUARIO.name(), u);
+                        return;
+                    }
+                } catch (Exception e) {
+                    ctx.removeCookie(COOKIE_NAME);
+                }
             }
         }
 
-        if (ctx.queryParam("error") != null) {
-            model.put("error", "Usuario o contraseña incorrectos.");
+        if (ctx.sessionAttribute(Main.KeySession.USUARIO.name()) == null) {
+            ctx.sessionAttribute(Main.KeySession.USUARIO.name(), servicioUsuario.buscarPorUsername(""));
         }
+    }
 
+    public static void adminValido(Context ctx) {
+        Usuario usuario = ctx.sessionAttribute(Main.KeySession.USUARIO.name());
+        if (usuario == null || usuario.getRol() != RolesUsuario.ADMIN) {
+            ctx.redirect("/productos"); // Redirigir si no es admin
+        }
+    }
+
+    public static void vistaLogin(Context ctx) {
+        Map<String, Object> model = new HashMap<>();
+        if (ctx.queryParam("error") != null) {
+            model.put("error", "Credenciales inválidas.");
+        }
         ctx.render("templates/login.html", model);
     }
 
-    public static void procesarLogin(Context ctx){
+    public static void procesarLogin(Context ctx) {
         String nombre = ctx.formParam("usuario");
         String password = ctx.formParam("password");
+        String recordar = ctx.formParam("recordar");
 
         Usuario usuario = servicioUsuario.validarLogin(nombre, password);
 
         if (usuario != null) {
             ctx.sessionAttribute(Main.KeySession.USUARIO.name(), usuario);
 
-            String anteriorPath = ctx.sessionAttribute(Main.KeySession.REFERER.name());
-            ctx.redirect((anteriorPath != null) ? anteriorPath : "/productos");
+
+            if (recordar != null) {
+                BasicTextEncryptor textEncryptor = new BasicTextEncryptor();
+                textEncryptor.setPassword(CLAVE_ENCRIPCION);
+                String valorEncriptado = textEncryptor.encrypt(usuario.getUsuario());
+
+                Cookie cookie = new Cookie(COOKIE_NAME, valorEncriptado);
+                cookie.setMaxAge(604800); // 1 semana
+                cookie.setHttpOnly(true);
+                ctx.cookie(cookie);
+            }
+
+
+            ServicioLog.registrarAcceso(usuario.getUsuario());
+
 
             servicioCarrito.mergeCarritoLogin(usuario);
+
+            String anteriorPath = ctx.sessionAttribute(Main.KeySession.REFERER.name());
+            ctx.redirect((anteriorPath != null) ? anteriorPath : "/productos");
         } else {
             ctx.redirect("/login?error=1");
         }
     }
 
-    public static void logout(Context ctx){
-        ctx.sessionAttribute(Main.KeySession.USUARIO.name(), servicioUsuario.buscarPorUsername(""));
+    public static void logout(Context ctx) {
+        ctx.req().getSession().invalidate();
+        ctx.removeCookie(COOKIE_NAME);
+        ctx.redirect("/productos");
+    }
 
-        String anteriorPath = ctx.header("Referer");
-        ctx.redirect((anteriorPath != null && !anteriorPath.isEmpty()) ? anteriorPath : "/productos");
+    public static void defaultPath(Context ctx) { ctx.redirect("/productos"); }
+    public static void volver(Context ctx) {
+        String path = ctx.sessionAttribute(Main.KeySession.REFERER.name());
+        ctx.redirect(path != null ? path : "/productos");
     }
 }

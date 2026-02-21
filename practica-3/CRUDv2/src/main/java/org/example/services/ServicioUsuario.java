@@ -1,126 +1,146 @@
 package org.example.services;
 
+import jakarta.persistence.EntityManager;
 import org.example.models.EstadoObjeto;
 import org.example.models.RolesUsuario;
 import org.example.models.Usuario;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class ServicioUsuario {
 
-    private ArrayList<Usuario> listaUsuarios;
-
     public ServicioUsuario() {
-        listaUsuarios = new ArrayList<>();
-        crear("", "", RolesUsuario.NO_AUTENTICADO);
-        crear("admin", "admin", RolesUsuario.ADMIN);
+
     }
 
     public Usuario crear(String username, String password, RolesUsuario rol) {
         Usuario usuario = new Usuario(username, password, rol);
-        listaUsuarios.add(usuario);
+        EntityManager em = BootStrapServices.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            em.persist(usuario);
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+            e.printStackTrace();
+        } finally {
+            em.close();
+        }
         return usuario;
     }
 
     public Usuario buscarPorId(int id) {
-
-        for (Usuario usuario : listaUsuarios) {
-            if (usuario.getId() == id) {
-                return usuario;
-            }
+        EntityManager em = BootStrapServices.getEntityManager();
+        try {
+            return em.find(Usuario.class, id);
+        } finally {
+            em.close();
         }
-
-        return null;
     }
 
     public Usuario buscarPorUsername(String username) {
-
-        for (Usuario usuario : listaUsuarios) {
-            if (usuario.getUsuario().equals(username)) {
-                return usuario;
-            }
+        EntityManager em = BootStrapServices.getEntityManager();
+        try {
+            return em.createQuery("SELECT u FROM Usuario u WHERE u.usuario = :user", Usuario.class)
+                    .setParameter("user", username)
+                    .getSingleResult();
+        } catch (Exception e) {
+            return null;
+        } finally {
+            em.close();
         }
-
-        return null;
-
     }
 
-
     public Usuario validarLogin(String username, String password) {
-
         Usuario usuario = buscarPorUsername(username);
-
         if (usuario != null &&
                 usuario.getPassword().equals(password) &&
                 usuario.getEstado() == EstadoObjeto.ACTIVO) {
-
             return usuario;
         }
-
         return null;
-
     }
 
     public boolean modificarPorId(int id, String nuevoUsername, String nuevoPassword, RolesUsuario nuevoRol) {
-
-        Usuario usuario = buscarPorId(id);
-
-        if (usuario != null && usuario.getEstado() == EstadoObjeto.ACTIVO) {
-            usuario.setUsuario(nuevoUsername);
-            usuario.setPassword(nuevoPassword);
-            usuario.setRol(nuevoRol);
-
-            return true;
+        EntityManager em = BootStrapServices.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            Usuario usuario = em.find(Usuario.class, id);
+            if (usuario != null && usuario.getEstado() == EstadoObjeto.ACTIVO) {
+                usuario.setUsuario(nuevoUsername);
+                usuario.setPassword(nuevoPassword);
+                usuario.setRol(nuevoRol);
+                em.merge(usuario);
+                em.getTransaction().commit();
+                return true;
+            }
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+        } finally {
+            em.close();
         }
-
         return false;
     }
 
     public boolean borrarPorId(int id) {
-
-        Usuario usuario = buscarPorId(id);
-
-        if (usuario != null && usuario.getEstado() == EstadoObjeto.ACTIVO) {
-            usuario.setEstado(EstadoObjeto.INACTIVO);
-
-            return true;
+        EntityManager em = BootStrapServices.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            Usuario usuario = em.find(Usuario.class, id);
+            if (usuario != null) {
+                usuario.setEstado(EstadoObjeto.INACTIVO);
+                em.merge(usuario);
+                em.getTransaction().commit();
+                return true;
+            }
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+        } finally {
+            em.close();
         }
-
         return false;
     }
 
     public boolean borrarPorUsername(String username) {
-        Usuario usuario = buscarPorUsername(username);
-
-        if (usuario != null && usuario.getEstado() == EstadoObjeto.ACTIVO) {
-            usuario.setEstado(EstadoObjeto.INACTIVO);
-            return true;
+        EntityManager em = BootStrapServices.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            Usuario usuario = buscarPorUsername(username); // Reutilizamos búsqueda
+            if (usuario != null) {
+                Usuario userDb = em.find(Usuario.class, usuario.getId());
+                userDb.setEstado(EstadoObjeto.INACTIVO);
+                em.merge(userDb);
+                em.getTransaction().commit();
+                return true;
+            }
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+        } finally {
+            em.close();
         }
-
         return false;
     }
 
-    public ArrayList<Usuario> listarTodos() {
-        ArrayList<Usuario> todos = new ArrayList<>();
-
-        for (Usuario usuario : listaUsuarios) {
-            if (usuario.getRol() != RolesUsuario.NO_AUTENTICADO) {
-                todos.add(usuario);
-            }
+    public List<Usuario> listarTodos() {
+        EntityManager em = BootStrapServices.getEntityManager();
+        try {
+            return em.createQuery("SELECT u FROM Usuario u WHERE u.rol <> :rol", Usuario.class)
+                    .setParameter("rol", RolesUsuario.NO_AUTENTICADO)
+                    .getResultList();
+        } finally {
+            em.close();
         }
-
-        return todos;
     }
 
-    public ArrayList<Usuario> listarActivos() {
-        ArrayList<Usuario> activos = new ArrayList<>();
-
-        for (Usuario usuario : listaUsuarios) {
-            if (usuario.getEstado() == EstadoObjeto.ACTIVO && usuario.getRol() != RolesUsuario.NO_AUTENTICADO) {
-                activos.add(usuario);
-            }
+    public List<Usuario> listarActivos() {
+        EntityManager em = BootStrapServices.getEntityManager();
+        try {
+            return em.createQuery("SELECT u FROM Usuario u WHERE u.estado = :est AND u.rol <> :rol", Usuario.class)
+                    .setParameter("est", EstadoObjeto.ACTIVO)
+                    .setParameter("rol", RolesUsuario.NO_AUTENTICADO)
+                    .getResultList();
+        } finally {
+            em.close();
         }
-
-        return activos;
     }
 }

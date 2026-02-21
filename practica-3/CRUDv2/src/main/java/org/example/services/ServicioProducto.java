@@ -1,94 +1,113 @@
 package org.example.services;
 
+import jakarta.persistence.EntityManager;
 import org.example.models.EstadoObjeto;
 import org.example.models.Producto;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-
+import java.util.List;
 
 public class ServicioProducto {
 
-    private ArrayList<Producto> listaProductos;
-
     public ServicioProducto() {
-        listaProductos = new ArrayList<Producto>();
     }
 
-    public Producto crear(String nombre, BigDecimal precio, int cantidad) {
+    public Producto crear(String nombre, BigDecimal precio, int cantidad, String descripcion) {
 
-        Producto producto = new Producto(nombre, precio,cantidad);
+        Producto producto = new Producto(nombre, precio, cantidad, descripcion);
 
-        listaProductos.add(producto);
-
+        EntityManager em = BootStrapServices.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            em.persist(producto);
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+            e.printStackTrace();
+        } finally {
+            em.close();
+        }
         return producto;
     }
 
     public Producto buscarPorId(int id) {
-
-        for (Producto producto : listaProductos) {
-            if (producto.getId() == id) {
-                return producto;
-            }
+        EntityManager em = BootStrapServices.getEntityManager();
+        try {
+            return em.find(Producto.class, id);
+        } finally {
+            em.close();
         }
-
-        return null;
     }
 
     public Producto buscarActivoPorId(int id) {
-
         Producto producto = buscarPorId(id);
-
         if (producto != null && producto.getEstado() == EstadoObjeto.ACTIVO) {
             return producto;
         }
-
         return null;
     }
 
     public boolean modificarPorId(int id, String nuevoNombre, BigDecimal nuevoPrecio, int nuevaCantidad) {
+        EntityManager em = BootStrapServices.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            Producto producto = em.find(Producto.class, id);
 
-        Producto producto = buscarPorId(id);
+            if (producto != null && producto.getEstado() == EstadoObjeto.ACTIVO) {
+                producto.setNombre(nuevoNombre);
+                producto.setPrecio(nuevoPrecio);
+                producto.setCantidad(nuevaCantidad);
 
-        if (producto != null && producto.getEstado() == EstadoObjeto.ACTIVO) {
-            producto.setNombre(nuevoNombre);
-            producto.setPrecio(nuevoPrecio);
-            producto.setCantidad(nuevaCantidad);
-
-            return true;
+                em.merge(producto);
+                em.getTransaction().commit();
+                return true;
+            }
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+        } finally {
+            em.close();
         }
-
         return false;
     }
-
 
     public boolean borrarPorId(int id) {
+        EntityManager em = BootStrapServices.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            Producto producto = em.find(Producto.class, id);
 
-        Producto producto = buscarPorId(id);
-
-        if (producto != null && producto.getEstado() == EstadoObjeto.ACTIVO) {
-            producto.setEstado(EstadoObjeto.INACTIVO);
-            return true;
+            if (producto != null) {
+                producto.setEstado(EstadoObjeto.INACTIVO);
+                em.merge(producto);
+                em.getTransaction().commit();
+                return true;
+            }
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+        } finally {
+            em.close();
         }
-
         return false;
     }
 
+    public List<Producto> listarTodos() {
+        EntityManager em = BootStrapServices.getEntityManager();
+        try {
 
-    public ArrayList<Producto> listarTodos() {
-        return new ArrayList<>(listaProductos);
+            return em.createQuery("SELECT p FROM Producto p", Producto.class).getResultList();
+        } finally {
+            em.close();
+        }
     }
 
-    public ArrayList<Producto> listarActivos() {
-
-        ArrayList<Producto> activos = new ArrayList<>();
-
-        for (Producto producto : listaProductos) {
-            if (producto.getEstado() == EstadoObjeto.ACTIVO) {
-                activos.add(producto);
-            }
+    public List<Producto> listarActivos() {
+        EntityManager em = BootStrapServices.getEntityManager();
+        try {
+            return em.createQuery("SELECT p FROM Producto p WHERE p.estado = :est", Producto.class)
+                    .setParameter("est", EstadoObjeto.ACTIVO)
+                    .getResultList();
+        } finally {
+            em.close();
         }
-
-        return activos;
     }
 }

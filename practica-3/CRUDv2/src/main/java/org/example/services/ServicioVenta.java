@@ -1,73 +1,77 @@
 package org.example.services;
 
+import jakarta.persistence.EntityManager;
 import org.example.models.Producto;
 import org.example.models.Venta;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 public class ServicioVenta {
 
-    private ArrayList<Venta> listaVentas;
-
     public ServicioVenta() {
-        listaVentas = new ArrayList<>();
     }
 
-    public Venta registrar(String userCliente, ArrayList<Producto> productos) {
-        Venta venta = new Venta(new Date(), userCliente); //
+    public Venta registrar(String userCliente, List<Producto> productos) {
+        EntityManager em = BootStrapServices.getEntityManager();
+        Venta venta = new Venta(new Date(), userCliente);
 
-        Map<Integer, Integer> conteo = new HashMap<>();
-        Map<Integer, Producto> prototipos = new HashMap<>();
+        try {
+            em.getTransaction().begin();
 
-        for (Producto p : productos) {
-            int id = p.getId();
-            conteo.put(id, conteo.getOrDefault(id, 0) + 1);
-            prototipos.put(id, p);
+
+            List<Producto> productosManaged = new ArrayList<>();
+            for (Producto p : productos) {
+                Producto pDb = em.find(Producto.class, p.getId());
+                if (pDb != null) {
+                    productosManaged.add(pDb);
+                }
+            }
+
+            venta.setListaProducto(productosManaged);
+
+            em.persist(venta);
+            em.getTransaction().commit();
+            return venta;
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            e.printStackTrace();
+            return null;
+        } finally {
+            em.close();
         }
-
-        ArrayList<Producto> listaFinal = new ArrayList<>();
-
-        for (Map.Entry<Integer, Integer> entry : conteo.entrySet()) {
-            Producto original = prototipos.get(entry.getKey());
-
-            Producto pVenta = new Producto(original.getNombre(), original.getPrecio(), entry.getValue());
-            pVenta.setId(original.getId());
-
-            listaFinal.add(pVenta);
-        }
-
-        venta.setListaProducto(listaFinal);
-        listaVentas.add(venta);
-
-        return venta;
     }
-
 
     public Venta buscarPorId(long id) {
-        for (Venta venta : listaVentas) {
-            if (venta.getId() == id) {
-                return venta;
-            }
+        EntityManager em = BootStrapServices.getEntityManager();
+        try {
+            return em.find(Venta.class, id);
+        } finally {
+            em.close();
         }
-
-        return null;
     }
 
-    public ArrayList<Venta> listarTodas() {
-        return new ArrayList<>(listaVentas);
+    public List<Venta> listarTodas() {
+        EntityManager em = BootStrapServices.getEntityManager();
+        try {
+            return em.createQuery("SELECT v FROM Venta v ORDER BY v.fecha DESC", Venta.class)
+                    .getResultList();
+        } finally {
+            em.close();
+        }
     }
 
-    public ArrayList<Venta> listarPorCliente(String userCliente) {
-        ArrayList<Venta> resultado = new ArrayList<>();
-        for (Venta venta : listaVentas) {
-            if (venta.getUserCliente().equals(userCliente)) {
-                resultado.add(venta);
-            }
+    public List<Venta> listarPorCliente(String userCliente) {
+        EntityManager em = BootStrapServices.getEntityManager();
+        try {
+            return em.createQuery("SELECT v FROM Venta v WHERE v.userCliente = :user ORDER BY v.fecha DESC", Venta.class)
+                    .setParameter("user", userCliente)
+                    .getResultList();
+        } finally {
+            em.close();
         }
-
-        return resultado;
     }
 }

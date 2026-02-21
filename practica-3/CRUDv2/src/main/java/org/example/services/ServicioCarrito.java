@@ -1,109 +1,139 @@
 package org.example.services;
 
+import jakarta.persistence.EntityManager;
 import org.example.models.Carrito;
 import org.example.models.Producto;
 import org.example.models.Usuario;
 import org.example.Main;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class ServicioCarrito {
 
-    private ArrayList<Carrito> listaCarritos;
-
     public ServicioCarrito() {
-        this.listaCarritos = new ArrayList<>();
     }
 
     public Carrito crear(Usuario usuario) {
-
         Carrito carrito = new Carrito(usuario);
-        listaCarritos.add(carrito);
-
+        EntityManager em = BootStrapServices.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            em.persist(carrito);
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+        } finally {
+            em.close();
+        }
         return carrito;
     }
 
     public Carrito buscarPorId(long id) {
-        for (Carrito c : listaCarritos) {
-            if (c.getId() == id) {
-                return c;
-            }
+        EntityManager em = BootStrapServices.getEntityManager();
+        try {
+            return em.find(Carrito.class, (int)id);
+        } finally {
+            em.close();
         }
-
-        return null;
     }
 
     public boolean agregarProducto(long idCarrito, Producto producto) {
-        Carrito carrito = buscarPorId(idCarrito);
-        if (carrito == null) {
-            return false;
-        }
-
-        carrito.getListaProducto().add(producto);
-        return true;
-    }
-
-
-    public boolean eliminarProducto(long idCarrito, long idProducto) {
-
-        Carrito carrito = buscarPorId(idCarrito);
-        if (carrito == null) {
-            return false;
-        }
-
-        ArrayList<Producto> productos = carrito.getListaProducto();
-
-        for (Producto p : productos) {
-            if (p.getId() == idProducto) {
-                productos.remove(p);
+        EntityManager em = BootStrapServices.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            Carrito carrito = em.find(Carrito.class, (int)idCarrito);
+            if (carrito != null) {
+                Producto productoDb = em.find(Producto.class, producto.getId());
+                carrito.getListaProducto().add(productoDb);
+                em.merge(carrito);
+                em.getTransaction().commit();
                 return true;
             }
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+        } finally {
+            em.close();
         }
-
         return false;
     }
 
-    public ArrayList<Producto> listarProductos(long idCarrito) {
-
-        Carrito carrito = buscarPorId(idCarrito);
-
-        if (carrito == null) {
-            return null;
+    public boolean eliminarProducto(long idCarrito, long idProducto) {
+        EntityManager em = BootStrapServices.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            Carrito carrito = em.find(Carrito.class, (int)idCarrito);
+            if (carrito != null) {
+                carrito.getListaProducto().removeIf(p -> p.getId() == idProducto);
+                em.merge(carrito);
+                em.getTransaction().commit();
+                return true;
+            }
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+        } finally {
+            em.close();
         }
+        return false;
+    }
 
-        return carrito.getListaProducto();
+    public List<Producto> listarProductos(long idCarrito) {
+        Carrito carrito = buscarPorId(idCarrito);
+        return (carrito != null) ? carrito.getListaProducto() : new ArrayList<>();
     }
 
     public boolean vaciarCarrito(long idCarrito) {
-        Carrito carrito = buscarPorId(idCarrito);
-
-        if (carrito == null) {
-            return false;
+        EntityManager em = BootStrapServices.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            Carrito carrito = em.find(Carrito.class, (int)idCarrito);
+            if (carrito != null) {
+                carrito.getListaProducto().clear();
+                em.merge(carrito);
+                em.getTransaction().commit();
+                return true;
+            }
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+        } finally {
+            em.close();
         }
-        carrito.getListaProducto().clear();
-        return true;
+        return false;
     }
 
+    /**
+     * Pasa los productos del carrito temporal (sesión sin login) al carrito del usuario
+     */
     public boolean mergeCarritoLogin(Usuario usuario) {
-        Carrito carrito = buscarPorId(usuario.getId());
-        Carrito carritoUnir = buscarPorId(Main.servicioUsuario.buscarPorUsername("").getId());
+        Usuario anonimo = Main.servicioUsuario.buscarPorUsername("");
+        if (anonimo == null) return false;
 
-        if (carritoUnir == null)
-            return false;
+        Carrito carritoAnonimo = buscarPorId(anonimo.getId());
+        if (carritoAnonimo == null || carritoAnonimo.getListaProducto().isEmpty()) return true;
 
-        if (carrito == null){
-            carrito = crear(usuario);
+        Carrito carritoUsuario = buscarPorId(usuario.getId());
+        if (carritoUsuario == null) {
+            carritoUsuario = crear(usuario);
         }
 
-        ArrayList<Producto> productosUnidos = carrito.getListaProducto();
-        productosUnidos.addAll(carritoUnir.getListaProducto());
-        carrito.setListaProducto(productosUnidos);
-        vaciarCarrito(carritoUnir.getId());
+        EntityManager em = BootStrapServices.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            Carrito cUser = em.find(Carrito.class, carritoUsuario.getId());
+            Carrito cAnon = em.find(Carrito.class, carritoAnonimo.getId());
 
-        return true;
-    }
+            cUser.getListaProducto().addAll(cAnon.getListaProducto());
+            cAnon.getListaProducto().clear();
 
-    public ArrayList<Carrito> listar() {
-        return listaCarritos;
+            em.merge(cUser);
+            em.merge(cAnon);
+            em.getTransaction().commit();
+            return true;
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+            return false;
+        } finally {
+            em.close();
+        }
     }
 }

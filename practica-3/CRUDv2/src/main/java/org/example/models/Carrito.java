@@ -1,33 +1,60 @@
 package org.example.models;
 
+import jakarta.persistence.*;
 import java.util.ArrayList;
+import java.util.List;
 
+@Entity
+@Table(name = "carritos")
 public class Carrito {
-    private long id;
-    private ArrayList<Producto> listaProducto;
+
+    @Id
+    private int id;
+
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "carrito_productos",
+            joinColumns = @JoinColumn(name = "carrito_id"),
+            inverseJoinColumns = @JoinColumn(name = "producto_id")
+    )
+    private List<Producto> listaProducto;
+
+    @OneToOne
+    @MapsId
     private Usuario usuario;
+
+    @Enumerated(EnumType.STRING)
     private EstadoObjeto estado;
 
-    public Carrito(Usuario usuario) {
-        this.id = usuario.getId();
-        this.listaProducto = new ArrayList<Producto>();
-        this.usuario = usuario;
+
+    public Carrito() {
+        this.listaProducto = new ArrayList<>();
         this.estado = EstadoObjeto.ACTIVO;
     }
-    
-    public long getId() {
+
+
+    public Carrito(Usuario usuario) {
+        this();
+        this.usuario = usuario;
+        this.id = usuario.getId();
+    }
+
+
+
+    public int getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(int id) {
         this.id = id;
     }
 
-    public ArrayList<Producto> getListaProducto() {
+    public List<Producto> getListaProducto() {
         return listaProducto;
     }
 
-    public void setListaProducto(ArrayList<Producto> listaProducto) {
+    public void setListaProducto(List<Producto> listaProducto) {
         this.listaProducto = listaProducto;
     }
 

@@ -1,29 +1,37 @@
 package org.example.models;
 
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "usuarios")
 public class Usuario {
-    private static int count = 0;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+
+    @Column(unique = true, nullable = false)
     private String usuario;
+
+    @Column(nullable = false)
     private String password;
+
+    @Enumerated(EnumType.STRING)
     private RolesUsuario rol;
+
+    @Enumerated(EnumType.STRING)
     private EstadoObjeto estado;
 
+
+    public Usuario() {
+        this.estado = EstadoObjeto.ACTIVO;
+    }
+
     public Usuario(String usuario, String password, RolesUsuario rol) {
-        this.id = getCount();
+        this();
         this.usuario = usuario;
         this.password = password;
         this.rol = rol;
-        this.estado = EstadoObjeto.ACTIVO;
-
-        setCount(1 + getCount());
-    }
-
-    public static int getCount() {
-        return count;
-    }
-
-    public static void setCount(int count) {
-        Usuario.count = count;
     }
 
     public int getId() {

@@ -1,26 +1,30 @@
 package org.example.controllers;
 
 import io.javalin.http.Context;
+import io.javalin.http.UploadedFile;
 import org.example.Main;
 import org.example.models.Producto;
 import org.example.models.Usuario;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.example.Main.servicioCarrito;
 import static org.example.Main.servicioProducto;
 
 public class ControladorProducto {
-    public static void vistaListar(Context ctx){
+
+    public static void vistaListar(Context ctx) {
         Usuario usuarioLogueado = ctx.sessionAttribute(Main.KeySession.USUARIO.name());
         Map<String, Object> model = new HashMap<>();
 
         int cantidadCarrito = 0;
         if (usuarioLogueado != null) {
-            ArrayList<Producto> lista = servicioCarrito.listarProductos(usuarioLogueado.getId());
+            List<Producto> lista = servicioCarrito.listarProductos(usuarioLogueado.getId());
             if (lista != null) {
                 cantidadCarrito = lista.size();
             }
@@ -29,36 +33,42 @@ public class ControladorProducto {
         model.put("productos", servicioProducto.listarActivos());
         model.put("usuario", usuarioLogueado);
         model.put("cantidadCarrito", cantidadCarrito);
+
         ctx.sessionAttribute(Main.KeySession.REFERER.name(), "/productos");
         ctx.render("templates/productos.html", model);
     }
 
-    public static void vistaCrear(Context ctx){
+    public static void vistaCrear(Context ctx) {
         ctx.render("templates/admin/crearProducto.html");
     }
 
-    public static void crear(Context ctx){
+    public static void crear(Context ctx) {
         String nombre = ctx.formParam("nombre");
         String precioStr = ctx.formParam("precio");
         String cantidadStr = ctx.formParam("cantidad");
+        String descripcion = ctx.formParam("descripcion");
+
+        List<String> imagenesBase64 = procesarImagenes(ctx);
 
         if (nombre != null && precioStr != null) {
             BigDecimal precio = new BigDecimal(precioStr);
+            int cantidad = Integer.parseInt(cantidadStr);
 
-            assert cantidadStr != null;
-            servicioProducto.crear(nombre, precio, Integer.parseInt(cantidadStr));
+            Producto p = servicioProducto.crear(nombre, precio, cantidad, descripcion);
+            p.setImagenes(imagenesBase64);
+
+            servicioProducto.modificarPorId(p.getId(), p.getNombre(), p.getPrecio(), p.getCantidad());
         }
         ctx.redirect("/productos");
     }
 
-    public static void eliminar(Context ctx){
+    public static void eliminar(Context ctx) {
         int id = Integer.parseInt(ctx.pathParam("id"));
         servicioProducto.borrarPorId(id);
         ctx.redirect("/productos");
     }
 
-
-    public static void vistaModificar(Context ctx){
+    public static void vistaModificar(Context ctx) {
         int id = Integer.parseInt(ctx.pathParam("id"));
         Producto producto = servicioProducto.buscarActivoPorId(id);
 
@@ -71,7 +81,7 @@ public class ControladorProducto {
         }
     }
 
-    public static void modificar(Context ctx){
+    public static void modificar(Context ctx) {
         int id = Integer.parseInt(ctx.formParam("id"));
         String nombre = ctx.formParam("nombre");
         BigDecimal precio = new BigDecimal(ctx.formParam("precio"));
@@ -79,5 +89,23 @@ public class ControladorProducto {
 
         servicioProducto.modificarPorId(id, nombre, precio, cantidad);
         ctx.redirect("/productos");
+    }
+
+
+    private static List<String> procesarImagenes(Context ctx) {
+        List<String> listaBase64 = new ArrayList<>();
+        List<UploadedFile> archivos = ctx.uploadedFiles("imagenes");
+
+        for (UploadedFile archivo : archivos) {
+            try {
+                byte[] bytes = archivo.content().readAllBytes();
+                String base64 = Base64.getEncoder().encodeToString(bytes);
+                String dataUri = "data:" + archivo.contentType() + ";base64," + base64;
+                listaBase64.add(dataUri);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return listaBase64;
     }
 }

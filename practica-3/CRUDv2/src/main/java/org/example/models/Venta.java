@@ -1,32 +1,58 @@
 package org.example.models;
 
+import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
+@Entity
+@Table(name = "ventas")
 public class Venta {
-    private static long count;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
+
+    @Temporal(TemporalType.TIMESTAMP)
     private Date fecha;
+
     private String userCliente;
-    private ArrayList<Producto> listaProducto;
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "venta_productos",
+            joinColumns = @JoinColumn(name = "venta_id"),
+            inverseJoinColumns = @JoinColumn(name = "producto_id")
+    )
+    private List<Producto> listaProducto;
+
+
+    public Venta() {
+        this.listaProducto = new ArrayList<>();
+        this.fecha = new Date();
+    }
+
 
     public Venta(Date fecha, String userCliente) {
-        this.id = getCount();
+        this();
         this.fecha = fecha;
         this.userCliente = userCliente;
-        this.listaProducto = new ArrayList<Producto>();
-
-        setCount(1 + getCount());
     }
 
-    public static long getCount() {
-        return count;
+
+
+    public BigDecimal getTotalVenta() {
+        BigDecimal total = BigDecimal.ZERO;
+        for (Producto p : listaProducto) {
+
+            BigDecimal cantidadBD = new BigDecimal(p.getCantidad());
+            BigDecimal subtotal = p.getPrecio().multiply(cantidadBD);
+            total = total.add(subtotal);
+        }
+        return total;
     }
 
-    public static void setCount(long count) {
-        Venta.count = count;
-    }
 
     public long getId() {
         return id;
@@ -52,23 +78,11 @@ public class Venta {
         this.userCliente = userCliente;
     }
 
-    public ArrayList<Producto> getListaProducto() {
+    public List<Producto> getListaProducto() {
         return listaProducto;
     }
 
-    public void setListaProducto(ArrayList<Producto> listaProducto) {
+    public void setListaProducto(List<Producto> listaProducto) {
         this.listaProducto = listaProducto;
-    }
-
-    public BigDecimal getTotalVenta() {
-        BigDecimal total = BigDecimal.ZERO; //
-        for (Producto p : listaProducto) { //
-
-            BigDecimal cantidadBD = new BigDecimal(p.getCantidad());
-            BigDecimal subtotal = p.getPrecio().multiply(cantidadBD);
-            total = total.add(subtotal); //
-        }
-
-        return total;
     }
 }

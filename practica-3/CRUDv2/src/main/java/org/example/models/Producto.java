@@ -1,32 +1,56 @@
 package org.example.models;
 
+import jakarta.persistence.*;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
+@Entity
+@Table(name = "productos")
 public class Producto {
-    private static int count = 0;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+
+    @Column(nullable = false)
     private String nombre;
+
+    @Column(nullable = false)
     private BigDecimal precio;
+
+    @Column(nullable = false)
     private int cantidad;
+
+    @Column(columnDefinition = "TEXT")
+    private String descripcion; // Requerido por el PDF
+
+    @Enumerated(EnumType.STRING)
     private EstadoObjeto estado;
 
-    public Producto(String nombre, BigDecimal precio, int cantidad) {
-        this.id = getCount();
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "producto_imagenes", joinColumns = @JoinColumn(name = "producto_id"))
+    @Column(name = "imagen_base64", columnDefinition = "CLOB")
+    private List<String> imagenes = new ArrayList<>();
+
+
+    @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comentario> comentarios = new ArrayList<>();
+
+
+    public Producto() {
+        this.estado = EstadoObjeto.ACTIVO;
+    }
+
+    public Producto(String nombre, BigDecimal precio, int cantidad, String descripcion) {
+        this();
         this.nombre = nombre;
         this.precio = precio;
-        this.estado = EstadoObjeto.ACTIVO;
         this.cantidad = cantidad;
-
-        setCount(1 + getCount());
+        this.descripcion = descripcion;
     }
 
-    public static int getCount() {
-        return count;
-    }
-
-    public static void setCount(int count) {
-        Producto.count = count;
-    }
+    // --- Getters y Setters ---
 
     public int getId() {
         return id;
@@ -52,6 +76,22 @@ public class Producto {
         this.precio = precio;
     }
 
+    public int getCantidad() {
+        return cantidad;
+    }
+
+    public void setCantidad(int cantidad) {
+        this.cantidad = cantidad;
+    }
+
+    public String getDescripcion() {
+        return descripcion;
+    }
+
+    public void setDescripcion(String descripcion) {
+        this.descripcion = descripcion;
+    }
+
     public EstadoObjeto getEstado() {
         return estado;
     }
@@ -60,11 +100,19 @@ public class Producto {
         this.estado = estado;
     }
 
-    public void setCantidad(int cantidad) {
-        this.cantidad = cantidad;
+    public List<String> getImagenes() {
+        return imagenes;
     }
 
-    public int getCantidad() {
-        return cantidad;
+    public void setImagenes(List<String> imagenes) {
+        this.imagenes = imagenes;
+    }
+
+    public List<Comentario> getComentarios() {
+        return comentarios;
+    }
+
+    public void setComentarios(List<Comentario> comentarios) {
+        this.comentarios = comentarios;
     }
 }
