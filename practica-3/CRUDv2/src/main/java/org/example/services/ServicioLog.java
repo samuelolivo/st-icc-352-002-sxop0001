@@ -9,21 +9,21 @@ import java.time.format.DateTimeFormatter;
 
 public class ServicioLog {
 
-    private static final String URL = "jdbc:h2:./practica3;AUTO_SERVER=TRUE";
-    private static final String USER = "sa";
-    private static final String PASS = "sa";
-
+    private static final String URL = "jdbc:postgresql://practica3db-22471.j77.aws-us-east-1.cockroachlabs.cloud:26257/defaultdb?sslmode=require";
+    private static final String USER = "joseph";
+    private static final String PASS = "8uc6EF3T_zgP0I-WNTCnmg";
 
     public static void registrarAcceso(String username) {
 
         String sqlCrearTabla = "CREATE TABLE IF NOT EXISTS LOG_SESIONES (" +
-                "id INT AUTO_INCREMENT PRIMARY KEY, " +
+                "id SERIAL PRIMARY KEY, " +
                 "usuario VARCHAR(100), " +
                 "fecha_acceso VARCHAR(100))";
 
         String sqlInsertar = "INSERT INTO LOG_SESIONES (usuario, fecha_acceso) VALUES (?, ?)";
 
         try (Connection conn = DriverManager.getConnection(URL, USER, PASS)) {
+
 
             try (PreparedStatement createStmt = conn.prepareStatement(sqlCrearTabla)) {
                 createStmt.execute();
@@ -37,7 +37,7 @@ public class ServicioLog {
                 insertStmt.setString(2, fechaActual);
 
                 insertStmt.executeUpdate();
-                System.out.println("[JDBC LOG] Usuario '" + username + "' ha iniciado sesión correctamente.");
+                System.out.println("[JDBC LOG] Usuario '" + username + "' ha iniciado sesion correctamente en CockroachDB.");
             }
 
         } catch (SQLException e) {
