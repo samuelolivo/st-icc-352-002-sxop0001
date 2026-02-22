@@ -62,6 +62,7 @@ public class ServicioProducto {
                 producto.setDescripcion(nuevaDescripcion);
 
                 if (nuevasImagenes != null && !nuevasImagenes.isEmpty()) {
+                    producto.getImagenes().clear();
                     producto.getImagenes().addAll(nuevasImagenes);
                 }
 

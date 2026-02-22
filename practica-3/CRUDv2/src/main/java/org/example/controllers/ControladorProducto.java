@@ -98,14 +98,17 @@ public class ControladorProducto {
 
         for (UploadedFile archivo : archivos) {
             try {
-                byte[] bytes = archivo.content().readAllBytes();
-                String base64 = Base64.getEncoder().encodeToString(bytes);
-                String dataUri = "data:" + archivo.contentType() + ";base64," + base64;
-                listaBase64.add(dataUri);
+                if (archivo.size() > 0 && archivo.filename() != null && !archivo.filename().isBlank()) {
+                    byte[] bytes = archivo.content().readAllBytes();
+                    String base64 = Base64.getEncoder().encodeToString(bytes);
+                    String dataUri = "data:" + archivo.contentType() + ";base64," + base64;
+                    listaBase64.add(dataUri);
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
+
         return listaBase64;
     }
 
