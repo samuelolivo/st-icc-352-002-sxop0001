@@ -16,15 +16,15 @@ import static org.example.Main.servicioUsuario;
 
 public class ControladorSesion {
 
-    private static final String COOKIE_NAME = "recuerdame";
-    private static final String CLAVE_ENCRIPCION = "mi-clave-secreta-123";
+    private static final String COOKIE_USER = "recordar";
+    private static final String CLAVE_ENCRIPCION = "hugo-protege-mi-contra";
 
     public static void sesion(Context ctx) {
         Usuario usuarioSesion = ctx.sessionAttribute(Main.KeySession.USUARIO.name());
 
-
         if (usuarioSesion == null || usuarioSesion.getRol() == RolesUsuario.NO_AUTENTICADO) {
-            String cookieValor = ctx.cookie(COOKIE_NAME);
+            String cookieValor = ctx.cookie(COOKIE_USER);
+
             if (cookieValor != null) {
                 try {
                     BasicTextEncryptor textEncryptor = new BasicTextEncryptor();
@@ -37,7 +37,7 @@ public class ControladorSesion {
                         return;
                     }
                 } catch (Exception e) {
-                    ctx.removeCookie(COOKIE_NAME);
+                    ctx.removeCookie(COOKIE_USER);
                 }
             }
         }
@@ -65,7 +65,7 @@ public class ControladorSesion {
     public static void procesarLogin(Context ctx) {
         String nombre = ctx.formParam("usuario");
         String password = ctx.formParam("password");
-        String recordar = ctx.formParam("recordar");
+        boolean recordar = Boolean.parseBoolean(ctx.formParam("recordar"));
 
         Usuario usuario = servicioUsuario.validarLogin(nombre, password);
 
@@ -73,12 +73,12 @@ public class ControladorSesion {
             ctx.sessionAttribute(Main.KeySession.USUARIO.name(), usuario);
 
 
-            if (recordar != null) {
+            if (recordar) {
                 BasicTextEncryptor textEncryptor = new BasicTextEncryptor();
                 textEncryptor.setPassword(CLAVE_ENCRIPCION);
                 String valorEncriptado = textEncryptor.encrypt(usuario.getUsuario());
 
-                Cookie cookie = new Cookie(COOKIE_NAME, valorEncriptado);
+                Cookie cookie = new Cookie(COOKIE_USER, valorEncriptado);
                 cookie.setMaxAge(604800); // 1 semana
                 cookie.setHttpOnly(true);
                 ctx.cookie(cookie);
@@ -86,7 +86,6 @@ public class ControladorSesion {
 
 
             ServicioLog.registrarAcceso(usuario.getUsuario());
-
 
             servicioCarrito.mergeCarritoLogin(usuario);
 
@@ -99,7 +98,7 @@ public class ControladorSesion {
 
     public static void logout(Context ctx) {
         ctx.req().getSession().invalidate();
-        ctx.removeCookie(COOKIE_NAME);
+        ctx.removeCookie(COOKIE_USER);
         ctx.redirect("/productos");
     }
 
