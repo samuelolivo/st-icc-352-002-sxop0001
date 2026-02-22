@@ -62,6 +62,7 @@ public class Main {
 
 
         app.get("/productos", ControladorProducto::vistaListar);
+        app.get("/producto/ver/{id}", ControladorProducto::vistaVer);
         app.get("/admin/crearProducto", ControladorProducto::vistaCrear);
         app.post("/admin/guardarProducto", ControladorProducto::crear);
         app.get("/admin/eliminarProducto/{id}", ControladorProducto::eliminar);

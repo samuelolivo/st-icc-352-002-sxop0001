@@ -72,7 +72,6 @@ public class ControladorSesion {
         if (usuario != null) {
             ctx.sessionAttribute(Main.KeySession.USUARIO.name(), usuario);
 
-
             if (recordar) {
                 BasicTextEncryptor textEncryptor = new BasicTextEncryptor();
                 textEncryptor.setPassword(CLAVE_ENCRIPCION);

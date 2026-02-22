@@ -14,12 +14,23 @@
                 <h3 class="card-title mb-0">Nuevo Producto</h3>
             </div>
             <div class="card-body">
-                <form action="/admin/guardarProducto" method="post">
+                <form action="/admin/guardarProducto" method="post" enctype="multipart/form-data">
 
                     <div class="mb-3">
                         <label for="nombre" class="form-label">Nombre del Producto</label>
                         <input type="text" id="nombre" name="nombre" class="form-control"
                                placeholder="Hola Gustavo" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="descripcion" class="form-label">Descripción del Producto</label>
+                        <textarea id="descripcion" name="descripcion" class="form-control" rows="3" required></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="imagenes" class="form-label">Imágenes (Obligatorio)</label>
+                        <input type="file" id="imagenes" name="imagenes" class="form-control" multiple required accept="image/*">
+                        <div class="form-text">Puedes seleccionar una o varias imágenes.</div>
                     </div>
 
                     <div class="mb-3">

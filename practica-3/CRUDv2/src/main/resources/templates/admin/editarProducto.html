@@ -44,13 +44,24 @@
         </div>
 
         <div class="col-md-8 form-side">
-            <form action="/admin/actualizarProducto" method="post">
+            <form action="/admin/actualizarProducto" method="post" enctype="multipart/form-data">
                 <input type="hidden" name="id" th:value="${producto.id}">
 
                 <div class="mb-4">
                     <label class="form-label fw-bold text-secondary">Nombre del Producto</label>
                     <input type="text" name="nombre" class="form-control form-control-lg"
                            th:value="${producto.nombre}" required>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold text-secondary">Descripción</label>
+                    <textarea name="descripcion" class="form-control" rows="3" th:text="${producto.descripcion}" required></textarea>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold text-secondary">Nuevas Imágenes (Opcional)</label>
+                    <input type="file" name="imagenes" class="form-control" multiple accept="image/*">
+                    <div class="form-text">Si seleccionas nuevas imágenes, reemplazarán a las anteriores.</div>
                 </div>
 
                 <div class="row">

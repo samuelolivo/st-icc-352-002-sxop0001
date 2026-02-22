@@ -74,11 +74,16 @@
         <td th:text="'$' + ${p.precio}"></td>
         <td th:text="${p.cantidad}"></td>
         <td class="text-center">
-            <a th:href="${p.cantidad > 0} ? '/carrito/agregar/' + ${p.id} : '#'"
-               th:classappend="${p.cantidad <= 0} ? 'disabled btn-secondary' : 'btn-outline-primary'"
-               class="btn btn-sm">
-                <span th:text="${p.cantidad > 0} ? 'Agregar' : 'Agotado'"></span>
-            </a>
+            <div class="d-flex gap-2 justify-content-center">
+                <a th:href="'/producto/ver/' + ${p.id}" class="btn btn-sm btn-outline-info fw-bold">
+                    Ver </a>
+
+                <a th:href="${p.cantidad > 0} ? '/carrito/agregar/' + ${p.id} : '#'"
+                   th:classappend="${p.cantidad <= 0} ? 'disabled btn-secondary' : 'btn-outline-primary'"
+                   class="btn btn-sm fw-bold">
+                    <span th:text="${p.cantidad > 0} ? 'Agregar' : 'Agotado'"></span>
+                </a>
+            </div>
         </td>
     </tr>
     </tbody>

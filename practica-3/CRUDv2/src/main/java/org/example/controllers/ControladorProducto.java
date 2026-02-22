@@ -46,18 +46,15 @@ public class ControladorProducto {
         String nombre = ctx.formParam("nombre");
         String precioStr = ctx.formParam("precio");
         String cantidadStr = ctx.formParam("cantidad");
-        String descripcion = ctx.formParam("descripcion");
+        String descripcion = ctx.formParam("descripcion"); // Recuperar descripción
 
         List<String> imagenesBase64 = procesarImagenes(ctx);
 
-        if (nombre != null && precioStr != null) {
+        if (nombre != null && precioStr != null && !imagenesBase64.isEmpty()) {
             BigDecimal precio = new BigDecimal(precioStr);
             int cantidad = Integer.parseInt(cantidadStr);
 
-            Producto p = servicioProducto.crear(nombre, precio, cantidad, descripcion);
-            p.setImagenes(imagenesBase64);
-
-            servicioProducto.modificarPorId(p.getId(), p.getNombre(), p.getPrecio(), p.getCantidad());
+            servicioProducto.crear(nombre, precio, cantidad, descripcion, imagenesBase64);
         }
         ctx.redirect("/productos");
     }
@@ -86,8 +83,11 @@ public class ControladorProducto {
         String nombre = ctx.formParam("nombre");
         BigDecimal precio = new BigDecimal(ctx.formParam("precio"));
         int cantidad = Integer.parseInt(ctx.formParam("cantidad"));
+        String descripcion = ctx.formParam("descripcion");
 
-        servicioProducto.modificarPorId(id, nombre, precio, cantidad);
+        List<String> imagenesBase64 = procesarImagenes(ctx);
+
+        servicioProducto.modificarPorId(id, nombre, precio, cantidad, descripcion, imagenesBase64);
         ctx.redirect("/productos");
     }
 
@@ -107,5 +107,19 @@ public class ControladorProducto {
             }
         }
         return listaBase64;
+    }
+
+    public static void vistaVer(Context ctx) {
+        int id = Integer.parseInt(ctx.pathParam("id"));
+        Producto producto = servicioProducto.buscarActivoPorId(id);
+
+        if (producto != null) {
+            Map<String, Object> model = new HashMap<>();
+            model.put("producto", producto);
+
+            ctx.render("templates/verProducto.html", model);
+        } else {
+            ctx.redirect("/productos");
+        }
     }
 }

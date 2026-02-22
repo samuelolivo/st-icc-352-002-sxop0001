@@ -12,9 +12,11 @@ public class ServicioProducto {
     public ServicioProducto() {
     }
 
-    public Producto crear(String nombre, BigDecimal precio, int cantidad, String descripcion) {
-
+    public Producto crear(String nombre, BigDecimal precio, int cantidad, String descripcion, List<String> imagenes) {
         Producto producto = new Producto(nombre, precio, cantidad, descripcion);
+        if (imagenes != null) {
+            producto.setImagenes(imagenes);
+        }
 
         EntityManager em = BootStrapServices.getEntityManager();
         try {
@@ -47,7 +49,7 @@ public class ServicioProducto {
         return null;
     }
 
-    public boolean modificarPorId(int id, String nuevoNombre, BigDecimal nuevoPrecio, int nuevaCantidad) {
+    public boolean modificarPorId(int id, String nuevoNombre, BigDecimal nuevoPrecio, int nuevaCantidad, String nuevaDescripcion, List<String> nuevasImagenes) {
         EntityManager em = BootStrapServices.getEntityManager();
         try {
             em.getTransaction().begin();
@@ -57,6 +59,11 @@ public class ServicioProducto {
                 producto.setNombre(nuevoNombre);
                 producto.setPrecio(nuevoPrecio);
                 producto.setCantidad(nuevaCantidad);
+                producto.setDescripcion(nuevaDescripcion);
+
+                if (nuevasImagenes != null && !nuevasImagenes.isEmpty()) {
+                    producto.getImagenes().addAll(nuevasImagenes);
+                }
 
                 em.merge(producto);
                 em.getTransaction().commit();

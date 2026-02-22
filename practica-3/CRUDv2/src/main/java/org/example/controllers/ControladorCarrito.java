@@ -98,7 +98,9 @@ public class ControladorCarrito {
                     item.getId(),
                     stockReal.getNombre(),
                     stockReal.getPrecio(),
-                    stockReal.getCantidad() - 1
+                    stockReal.getCantidad() - 1,
+                    stockReal.getDescripcion(),
+                    stockReal.getImagenes()
             );
         }
 
