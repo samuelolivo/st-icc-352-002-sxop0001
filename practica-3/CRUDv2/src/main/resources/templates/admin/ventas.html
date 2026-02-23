@@ -59,19 +59,12 @@
       <tr class="text-center">
         <th class="text-start ps-4 py-3">Producto</th>
         <th>Precio Unitario ($)</th>
-        <th>Cantidad</th>
-        <th class="text-end pe-4">Subtotal ($)</th>
       </tr>
       </thead>
       <tbody>
       <tr th:each="p : ${v.listaProducto}">
         <td class="ps-4 fw-semibold" th:text="${p.nombre}">Producto</td>
         <td class="text-center" th:text="${p.precio}">0.00</td>
-        <td class="text-center">
-          <span class="text-center" th:text="${p.cantidad}">1</span>
-        </td>
-        <td class="text-end pe-4 fw-bold"
-            th:text="${p.precio * p.cantidad}">0.00</td>
       </tr>
       </tbody>
       <tfoot>

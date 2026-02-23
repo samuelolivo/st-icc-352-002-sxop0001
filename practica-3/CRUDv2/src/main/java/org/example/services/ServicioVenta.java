@@ -7,6 +7,7 @@ import org.example.models.Venta;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 public class ServicioVenta {
 
@@ -20,12 +21,25 @@ public class ServicioVenta {
         try {
             em.getTransaction().begin();
 
-
             List<Producto> productosManaged = new ArrayList<>();
             for (Producto p : productos) {
                 Producto pDb = em.find(Producto.class, p.getId());
                 if (pDb != null) {
-                    productosManaged.add(pDb);
+                    if (!productosManaged.contains(pDb)) {
+                        Producto pNuevo = new Producto(pDb.getNombre(), pDb.getPrecio(), 1, pDb.getDescripcion());
+                        pNuevo.setId(pDb.getId());
+                        productosManaged.add(pNuevo);
+                    }
+                    else {
+                        for (Producto pm : productosManaged)
+                        {
+                            if (pm.getId() == pDb.getId())
+                            {
+                                pm.setCantidad(pm.getCantidad() + 1);
+                                break;
+                            }
+                        }
+                    }
                 }
             }
 

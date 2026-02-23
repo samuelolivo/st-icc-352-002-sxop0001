@@ -46,9 +46,9 @@ public class Venta {
         BigDecimal total = BigDecimal.ZERO;
         for (Producto p : listaProducto) {
 
-            BigDecimal cantidadBD = new BigDecimal(p.getCantidad());
-            BigDecimal subtotal = p.getPrecio().multiply(cantidadBD);
-            total = total.add(subtotal);
+            //BigDecimal cantidadBD = new BigDecimal(p.getCantidad());
+            //BigDecimal subtotal = p.getPrecio().multiply(cantidadBD);
+            total = total.add(p.getPrecio());
         }
         return total;
     }
