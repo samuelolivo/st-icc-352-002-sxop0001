@@ -73,4 +73,14 @@ public class Usuario {
     public void setEstado(EstadoObjeto estado) {
         this.estado = estado;
     }
+
+    public static Usuario usuarioInvitado() {
+        Usuario invitado = new Usuario();
+        invitado.setId(-1);
+        invitado.setUsuario("Invitado");
+        invitado.setPassword("");
+        invitado.setRol(RolesUsuario.NO_AUTENTICADO);
+        invitado.setEstado(EstadoObjeto.ACTIVO);
+        return invitado;
+    }
 }
