@@ -3,6 +3,7 @@ package org.example.controllers;
 import io.javalin.http.Context;
 import io.javalin.http.UploadedFile;
 import org.example.Main;
+import org.example.models.Carrito;
 import org.example.models.Producto;
 import org.example.models.Usuario;
 
@@ -31,7 +32,16 @@ public class ControladorProducto {
 
         int cantidadCarrito = 0;
         if (usuarioLogueado != null) {
-            List<Producto> lista = servicioCarrito.listarProductos(usuarioLogueado.getId());
+
+            List<Producto> lista;
+            if (servicioUsuario.usurioNoAutenticado(usuarioLogueado)) {
+                Carrito carrito = ctx.sessionAttribute(Main.KeySession.CARRITO_NA.name());
+                lista = carrito.getListaProducto();
+            }
+            else {
+                lista = servicioCarrito.listarProductos(usuarioLogueado.getId());
+            }
+
             if (lista != null) {
                 cantidadCarrito = lista.size();
             }

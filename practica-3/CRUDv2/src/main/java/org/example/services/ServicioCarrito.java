@@ -119,33 +119,34 @@ public class ServicioCarrito {
     }
 
 
-    public boolean mergeCarritoLogin(Usuario usuario) {
-        Usuario anonimo = Main.servicioUsuario.buscarPorUsername("");
-        if (anonimo == null) return false;
+    public boolean mergeCarritoLogin(Usuario usuario, Carrito carritoMerge) {
+        if (carritoMerge == null) {
+            return true;
+        }
 
-        Carrito carritoAnonimo = buscarPorId(anonimo.getId());
-        if (carritoAnonimo == null || carritoAnonimo.getListaProducto().isEmpty()) return true;
-
-        Carrito carritoUsuario = buscarPorId(usuario.getId());
-        if (carritoUsuario == null) {
-            carritoUsuario = crear(usuario);
+        if (carritoMerge.getListaProducto() == null || carritoMerge.getListaProducto().isEmpty()) {
+            return true;
         }
 
         EntityManager em = BootStrapServices.getEntityManager();
         try {
             em.getTransaction().begin();
-            Carrito cUser = em.find(Carrito.class, carritoUsuario.getId());
-            Carrito cAnon = em.find(Carrito.class, carritoAnonimo.getId());
 
-            cUser.getListaProducto().addAll(cAnon.getListaProducto());
-            cAnon.getListaProducto().clear();
+            Carrito carritoUsuario = em.find(Carrito.class, usuario.getId());
+            if (carritoUsuario == null) {
+                carritoUsuario = new Carrito(usuario);
+                em.persist(carritoUsuario);
+            }
 
-            em.merge(cUser);
-            em.merge(cAnon);
+            carritoUsuario.getListaProducto().addAll(carritoMerge.getListaProducto());
+            carritoMerge.getListaProducto().clear();
+
+            em.merge(carritoUsuario);
             em.getTransaction().commit();
             return true;
         } catch (Exception e) {
-            em.getTransaction().rollback();
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            e.printStackTrace();
             return false;
         } finally {
             em.close();

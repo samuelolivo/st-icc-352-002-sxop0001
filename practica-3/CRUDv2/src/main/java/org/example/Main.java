@@ -10,6 +10,8 @@ public class Main {
 
     public static enum KeySession {
         USUARIO,
+        USUARIO_NA,
+        CARRITO_NA,
         REFERER;
     }
 

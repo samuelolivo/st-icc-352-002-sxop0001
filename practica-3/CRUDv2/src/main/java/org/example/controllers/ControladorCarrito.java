@@ -2,6 +2,7 @@ package org.example.controllers;
 
 import io.javalin.http.Context;
 import org.example.Main;
+import org.example.models.Carrito;
 import org.example.models.Producto;
 import org.example.models.Usuario;
 
@@ -16,7 +17,15 @@ public class ControladorCarrito {
 
     public static void vistaListar(Context ctx) {
         Usuario usuario = ctx.sessionAttribute(Main.KeySession.USUARIO.name());
-        List<Producto> productosCarrito = servicioCarrito.listarProductos(usuario.getId());
+        List<Producto> productosCarrito;
+
+        if (servicioUsuario.usurioNoAutenticado(usuario)){
+            Carrito carritoNA = ctx.sessionAttribute(KeySession.CARRITO_NA.name());
+            productosCarrito = carritoNA.getListaProducto();
+        }
+        else{
+            productosCarrito = servicioCarrito.listarProductos(usuario.getId());
+        }
 
         BigDecimal total = productosCarrito.stream()
                 .map(Producto::getPrecio)
@@ -46,9 +55,18 @@ public class ControladorCarrito {
         Producto producto = servicioProducto.buscarActivoPorId(idProducto);
 
         if (producto != null && producto.getCantidad() > 0) {
+
+            if (servicioUsuario.usurioNoAutenticado(usuario)) {
+                Carrito c = ctx.sessionAttribute(KeySession.CARRITO_NA.name());
+                c.getListaProducto().add(producto);
+                ctx.redirect("/productos");
+                return;
+            }
+
             if (servicioCarrito.buscarPorId(usuario.getId()) == null) {
                 servicioCarrito.crear(usuario);
             }
+
             servicioCarrito.agregarProducto(usuario.getId(), producto);
             ctx.redirect("/productos");
         } else {
@@ -60,12 +78,30 @@ public class ControladorCarrito {
     public static void eliminar(Context ctx) {
         long idProd = Long.parseLong(ctx.pathParam("id"));
         Usuario usuario = ctx.sessionAttribute(Main.KeySession.USUARIO.name());
+
+        if (servicioUsuario.usurioNoAutenticado(usuario)) {
+            Carrito c = ctx.sessionAttribute(KeySession.CARRITO_NA.name());
+            c.getListaProducto().stream()
+                    .filter(p -> p.getId() == idProd)
+                    .findFirst()
+                    .ifPresent(p -> c.getListaProducto().remove(p));
+            ctx.redirect("/carrito");
+            return;
+        }
+
         servicioCarrito.eliminarProducto(usuario.getId(), idProd);
         ctx.redirect("/carrito");
     }
 
     public static void vaciar(Context ctx) {
         Usuario usuario = ctx.sessionAttribute(Main.KeySession.USUARIO.name());
+        if (servicioUsuario.usurioNoAutenticado(usuario)) {
+            Carrito c = ctx.sessionAttribute(KeySession.CARRITO_NA.name());
+            c.getListaProducto().clear();
+            ctx.redirect("/carrito");
+            return;
+        }
+
         servicioCarrito.vaciarCarrito(usuario.getId());
         ctx.redirect("/carrito");
     }
@@ -73,13 +109,20 @@ public class ControladorCarrito {
     public static void procesar(Context ctx) {
         Usuario usuario = ctx.sessionAttribute(Main.KeySession.USUARIO.name());
         String nombreCliente = ctx.formParam("nombreCliente");
-        List<Producto> enCarrito = servicioCarrito.listarProductos(usuario.getId());
+        Carrito c = ctx.sessionAttribute(KeySession.CARRITO_NA.name());
+        List<Producto> enCarrito;
+
+        if (servicioUsuario.usurioNoAutenticado(usuario)) {
+            enCarrito = c.getListaProducto();
+        }
+        else {
+            enCarrito = servicioCarrito.listarProductos(usuario.getId());
+        }
 
         if (enCarrito == null || enCarrito.isEmpty()) {
             ctx.redirect("/carrito");
             return;
         }
-
 
         for (Producto item : enCarrito) {
             long cantidadEnCarrito = enCarrito.stream()
@@ -109,7 +152,11 @@ public class ControladorCarrito {
 
 
         servicioVenta.registrar(nombreCliente, enCarrito);
-        servicioCarrito.vaciarCarrito(usuario.getId());
+        if (servicioUsuario.usurioNoAutenticado(usuario)) {
+            c.getListaProducto().clear();
+        }else {
+            servicioCarrito.vaciarCarrito(usuario.getId());
+        }
 
         ctx.redirect("/productos");
     }

@@ -3,6 +3,7 @@ package org.example.controllers;
 import io.javalin.http.Context;
 import io.javalin.http.Cookie;
 import org.example.Main;
+import org.example.models.Carrito;
 import org.example.models.RolesUsuario;
 import org.example.models.Usuario;
 import org.example.services.ServicioLog; // Servicio JDBC
@@ -17,13 +18,13 @@ import static org.example.Main.servicioUsuario;
 public class ControladorSesion {
 
     private static final String COOKIE_USER = "recordar";
-    private static final String CLAVE_ENCRIPCION = "hugo-protege-mi-contra";
+    private static final String CLAVE_ENCRIPCION = "gustavo-protege-mi-contra";
 
     public static void sesion(Context ctx) {
         Usuario usuarioSesion = ctx.sessionAttribute(Main.KeySession.USUARIO.name());
         System.out.println(ctx.path());
 
-        if (usuarioSesion == null || usuarioSesion.getRol() == RolesUsuario.NO_AUTENTICADO) {
+        if (usuarioSesion == null) {
             String cookieValor = ctx.cookie(COOKIE_USER);
 
             if (cookieValor != null) {
@@ -35,16 +36,19 @@ public class ControladorSesion {
                     Usuario u = servicioUsuario.buscarPorUsername(usuarioDesencriptado);
                     if (u != null) {
                         ctx.sessionAttribute(Main.KeySession.USUARIO.name(), u);
-                        return;
                     }
                 } catch (Exception e) {
                     ctx.removeCookie(COOKIE_USER);
                 }
             }
-        }
+            else {
+                Usuario u = Usuario.usuarioInvitado();
+                Carrito c = new Carrito(u);
+                ctx.sessionAttribute(Main.KeySession.USUARIO_NA.name(), u);
+                ctx.sessionAttribute(Main.KeySession.USUARIO.name(), u);
 
-        if (ctx.sessionAttribute(Main.KeySession.USUARIO.name()) == null) {
-            ctx.sessionAttribute(Main.KeySession.USUARIO.name(), servicioUsuario.buscarPorUsername(""));
+                ctx.sessionAttribute(Main.KeySession.CARRITO_NA.name(), c);
+            }
         }
     }
 
@@ -87,7 +91,7 @@ public class ControladorSesion {
 
             ServicioLog.registrarAcceso(usuario.getUsuario());
 
-            servicioCarrito.mergeCarritoLogin(usuario);
+            servicioCarrito.mergeCarritoLogin(usuario, ctx.sessionAttribute(Main.KeySession.CARRITO_NA.name()));
 
             String anteriorPath = ctx.sessionAttribute(Main.KeySession.REFERER.name());
             ctx.redirect((anteriorPath != null) ? anteriorPath : "/productos");

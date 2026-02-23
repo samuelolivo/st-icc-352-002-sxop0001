@@ -121,6 +121,13 @@ public class ServicioUsuario {
         return false;
     }
 
+    public boolean usurioNoAutenticado(Usuario u) {
+        if (u != null && u.getRol().equals(RolesUsuario.NO_AUTENTICADO)) {
+            return true;
+        }
+        return false;
+    }
+
     public List<Usuario> listarTodos() {
         EntityManager em = BootStrapServices.getEntityManager();
         try {
