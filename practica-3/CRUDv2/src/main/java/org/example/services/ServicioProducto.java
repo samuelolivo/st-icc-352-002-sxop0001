@@ -118,4 +118,31 @@ public class ServicioProducto {
             em.close();
         }
     }
+    public List<Producto> listarPaginados(int pagina, int tamano) {
+        EntityManager em = BootStrapServices.getEntityManager();
+        try {
+
+            int offset = (pagina - 1) * tamano;
+
+            return em.createQuery("SELECT p FROM Producto p WHERE p.estado = :est", Producto.class)
+                    .setParameter("est", EstadoObjeto.ACTIVO)
+                    .setFirstResult(offset)
+                    .setMaxResults(tamano)
+                    .getResultList();
+        } finally {
+            em.close();
+        }
+    }
+
+    public long contarActivos() {
+        EntityManager em = BootStrapServices.getEntityManager();
+        try {
+            return em.createQuery("SELECT COUNT(p) FROM Producto p WHERE p.estado = :est", Long.class)
+                    .setParameter("est", EstadoObjeto.ACTIVO)
+                    .getSingleResult();
+        } finally {
+            em.close();
+        }
+    }
+
 }

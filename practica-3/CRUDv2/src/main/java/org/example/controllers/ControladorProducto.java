@@ -21,6 +21,14 @@ public class ControladorProducto {
         Usuario usuarioLogueado = ctx.sessionAttribute(Main.KeySession.USUARIO.name());
         Map<String, Object> model = new HashMap<>();
 
+        int paginaActual = ctx.queryParamAsClass("page", Integer.class).getOrDefault(1);
+        int tamanoPagina = 10;
+
+        List<Producto> productos = servicioProducto.listarPaginados(paginaActual, tamanoPagina);
+        long totalProductos = servicioProducto.contarActivos();
+
+        boolean tieneSiguiente = (long) paginaActual * tamanoPagina < totalProductos;
+
         int cantidadCarrito = 0;
         if (usuarioLogueado != null) {
             List<Producto> lista = servicioCarrito.listarProductos(usuarioLogueado.getId());
@@ -29,11 +37,13 @@ public class ControladorProducto {
             }
         }
 
-        model.put("productos", servicioProducto.listarActivos());
+        model.put("productos", productos);
+        model.put("paginaActual", paginaActual);
+        model.put("tieneSiguiente", tieneSiguiente);
         model.put("usuario", usuarioLogueado);
         model.put("cantidadCarrito", cantidadCarrito);
 
-        ctx.sessionAttribute(Main.KeySession.REFERER.name(), "/productos");
+        ctx.sessionAttribute(Main.KeySession.REFERER.name(), "/productos?page=" + paginaActual);
         ctx.render("templates/productos.html", model);
     }
 
@@ -45,7 +55,7 @@ public class ControladorProducto {
         String nombre = ctx.formParam("nombre");
         String precioStr = ctx.formParam("precio");
         String cantidadStr = ctx.formParam("cantidad");
-        String descripcion = ctx.formParam("descripcion"); // Recuperar descripción
+        String descripcion = ctx.formParam("descripcion");
 
         List<String> imagenesBase64 = procesarImagenes(ctx);
 
