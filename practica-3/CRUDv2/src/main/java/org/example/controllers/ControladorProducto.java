@@ -13,8 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.example.Main.servicioCarrito;
-import static org.example.Main.servicioProducto;
+import static org.example.Main.*;
 
 public class ControladorProducto {
 
@@ -120,7 +119,11 @@ public class ControladorProducto {
             Map<String, Object> model = new HashMap<>();
             model.put("producto", producto);
 
+            model.put("comentarios", servicioComentario.listarPorProducto(id));
+            model.put("usuario", ctx.sessionAttribute(Main.KeySession.USUARIO.name()));
+
             ctx.render("templates/verProducto.html", model);
+            ctx.sessionAttribute(Main.KeySession.REFERER.name(), ctx.path());
         } else {
             ctx.redirect("/productos");
         }

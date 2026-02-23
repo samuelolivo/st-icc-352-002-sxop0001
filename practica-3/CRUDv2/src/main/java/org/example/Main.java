@@ -4,11 +4,7 @@ import io.javalin.Javalin;
 import io.javalin.http.staticfiles.Location;
 import io.javalin.rendering.template.JavalinThymeleaf;
 import org.example.controllers.*;
-import org.example.services.BootStrapServices;
-import org.example.services.ServicioCarrito;
-import org.example.services.ServicioProducto;
-import org.example.services.ServicioUsuario;
-import org.example.services.ServicioVenta;
+import org.example.services.*;
 
 public class Main {
 
@@ -21,6 +17,7 @@ public class Main {
     public static ServicioProducto servicioProducto = new ServicioProducto();
     public static ServicioCarrito servicioCarrito = new ServicioCarrito();
     public static ServicioVenta servicioVenta = new ServicioVenta();
+    public static ServicioComentario servicioComentario = new ServicioComentario();
 
     public static void main(String[] args) {
 
@@ -86,6 +83,10 @@ public class Main {
 
 
         app.get("/admin/ventas", ControladorVenta::vistaListar);
+
+
+        app.post("/comentarios/crear", ControladorComentario::crear);
+        app.get("/admin/comentarios/eliminar/{idComentario}/{idProducto}", ControladorComentario::eliminar);
 
 
     }

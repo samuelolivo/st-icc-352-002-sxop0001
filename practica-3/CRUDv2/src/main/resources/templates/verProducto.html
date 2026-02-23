@@ -33,7 +33,7 @@
   </div>
 
   <div class="d-flex justify-content-end align-items-center gap-2">
-    <a href="/volver" class="btn btn-outline-secondary">Volver</a>
+    <a href="/productos" class="btn btn-outline-secondary">Volver</a>
   </div>
 
 </div>
@@ -105,6 +105,55 @@
             <span th:classappend="${producto.cantidad > 0} ? 'text-dark' : 'text-danger fw-bold'" th:text="${producto.cantidad} + ' unidades en stock'"></span>
           </p>
         </div>
+    </div>
+  </div>
+</div>
+
+<div class="row mt-5">
+  <div class="col-12">
+    <div class="product-details">
+      <h4 class="fw-bold mb-4">Comentarios</h4>
+
+      <div th:if="${usuario != null && usuario.rol.name() != 'NO_AUTENTICADO'}" class="mb-5">
+        <form action="/comentarios/crear" method="post">
+          <input type="hidden" name="productoId" th:value="${producto.id}">
+          <div class="mb-3">
+            <label class="form-label fw-bold">Escribe tu opinión:</label>
+            <textarea name="contenido" class="form-control" rows="3" placeholder="¿Qué te pareció este producto?" required></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Publicar comentario</button>
+        </form>
+      </div>
+      <div th:unless="${usuario != null && usuario.rol.name() != 'NO_AUTENTICADO'}" class="alert alert-info">
+        Debes <a href="/login" class="fw-bold">iniciar sesión</a> para dejar un comentario.
+      </div>
+
+      <hr>
+
+      <div class="mt-4">
+        <div th:each="com : ${comentarios}" class="card mb-3 shadow-sm">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <h6 class="fw-bold mb-1" th:text="${com.usuario}"></h6>
+                <small class="text-muted" th:text="${#dates.format(com.fechaPublicacion, 'dd/MM/yyyy HH:mm')}"></small>
+              </div>
+
+              <a th:if="${usuario != null and usuario.rol.name() == 'ADMIN'}"
+                 th:href="@{'/admin/comentarios/eliminar/' + ${com.id} + '/' + ${producto.id}}"
+                 class="btn btn-sm btn-outline-danger"
+                 onclick="return confirm('¿Seguro que deseas eliminar este comentario?')">
+                 Eliminar
+              </a>
+            </div>
+            <p class="card-text mt-3" th:text="${com.contenido}"></p>
+          </div>
+        </div>
+
+        <div th:if="${comentarios.isEmpty()}" class="text-center text-muted py-4">
+          <p>Aún no hay comentarios.</p>
+        </div>
+      </div>
     </div>
   </div>
 </div>

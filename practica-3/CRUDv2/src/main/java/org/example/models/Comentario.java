@@ -1,7 +1,7 @@
 package org.example.models;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import java.util.Date;
 
 @Entity
 @Table(name = "comentarios")
@@ -18,15 +18,19 @@ public class Comentario {
     @Column(nullable = false)
     private String usuario;
 
-    @Column(name = "fecha_publicacion")
-    private LocalDateTime fechaPublicacion;
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date fechaPublicacion;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "producto_id")
     private Producto producto;
 
+    @Enumerated(EnumType.STRING)
+    private EstadoObjeto estado;
+
     public Comentario() {
-        this.fechaPublicacion = LocalDateTime.now();
+        this.estado = EstadoObjeto.ACTIVO;
+        this.fechaPublicacion = new Date();
     }
 
     public Comentario(String contenido, String usuario, Producto producto) {
@@ -36,7 +40,6 @@ public class Comentario {
         this.producto = producto;
     }
 
-    // Getters y Setters
     public Long getId() {
         return id;
     }
@@ -61,11 +64,11 @@ public class Comentario {
         this.usuario = usuario;
     }
 
-    public LocalDateTime getFechaPublicacion() {
+    public Date getFechaPublicacion() {
         return fechaPublicacion;
     }
 
-    public void setFechaPublicacion(LocalDateTime fechaPublicacion) {
+    public void setFechaPublicacion(Date fechaPublicacion) {
         this.fechaPublicacion = fechaPublicacion;
     }
 
@@ -76,4 +79,8 @@ public class Comentario {
     public void setProducto(Producto producto) {
         this.producto = producto;
     }
+
+    public EstadoObjeto getEstado() { return estado; }
+
+    public void setEstado(EstadoObjeto estado) { this.estado = estado; }
 }

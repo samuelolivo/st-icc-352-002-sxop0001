@@ -50,8 +50,6 @@ public class Producto {
         this.descripcion = descripcion;
     }
 
-    // --- Getters y Setters ---
-
     public int getId() {
         return id;
     }

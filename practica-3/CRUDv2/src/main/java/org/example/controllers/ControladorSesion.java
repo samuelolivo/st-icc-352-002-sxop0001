@@ -21,6 +21,7 @@ public class ControladorSesion {
 
     public static void sesion(Context ctx) {
         Usuario usuarioSesion = ctx.sessionAttribute(Main.KeySession.USUARIO.name());
+        System.out.println(ctx.path());
 
         if (usuarioSesion == null || usuarioSesion.getRol() == RolesUsuario.NO_AUTENTICADO) {
             String cookieValor = ctx.cookie(COOKIE_USER);
