@@ -35,21 +35,24 @@ public class ControladorCarrito {
     }
 
     public static void agregar(Context ctx) {
-        int idProducto = Integer.parseInt(ctx.pathParam("id"));
-        Producto producto = servicioProducto.buscarActivoPorId(idProducto);
         Usuario usuario = ctx.sessionAttribute(Main.KeySession.USUARIO.name());
 
-        if (producto != null && producto.getCantidad() > 0) {
+        if (usuario == null) {
+            ctx.redirect("/login");
+            return;
+        }
 
+        int idProducto = Integer.parseInt(ctx.pathParam("id"));
+        Producto producto = servicioProducto.buscarActivoPorId(idProducto);
+
+        if (producto != null && producto.getCantidad() > 0) {
             if (servicioCarrito.buscarPorId(usuario.getId()) == null) {
                 servicioCarrito.crear(usuario);
             }
-
             servicioCarrito.agregarProducto(usuario.getId(), producto);
             ctx.redirect("/productos");
         } else {
-
-            ctx.sessionAttribute("errorStock", "Lo sentimos, el producto seleccionado no tiene stock.");
+            ctx.sessionAttribute("errorStock", "Sin stock.");
             ctx.redirect("/productos");
         }
     }

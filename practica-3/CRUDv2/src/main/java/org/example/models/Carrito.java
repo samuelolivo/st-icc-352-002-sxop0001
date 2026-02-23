@@ -9,7 +9,7 @@ import java.util.List;
 public class Carrito {
 
     @Id
-    private int id;
+    private Integer id;
 
 
     @ManyToMany(fetch = FetchType.EAGER)
@@ -22,6 +22,7 @@ public class Carrito {
 
     @OneToOne
     @MapsId
+    @JoinColumn(name = "usuario_id")
     private Usuario usuario;
 
     @Enumerated(EnumType.STRING)
@@ -42,11 +43,11 @@ public class Carrito {
 
 
 
-    public int getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 

@@ -15,14 +15,22 @@ public class ServicioCarrito {
     }
 
     public Carrito crear(Usuario usuario) {
-        Carrito carrito = new Carrito(usuario);
         EntityManager em = BootStrapServices.getEntityManager();
+        Carrito carrito = null;
         try {
             em.getTransaction().begin();
-            em.persist(carrito);
-            em.getTransaction().commit();
+            Usuario usuarioManaged = em.find(Usuario.class, usuario.getId());
+
+            if (usuarioManaged != null) {
+                carrito = new Carrito();
+                carrito.setUsuario(usuarioManaged);
+
+                em.persist(carrito);
+                em.getTransaction().commit();
+            }
         } catch (Exception e) {
-            em.getTransaction().rollback();
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            e.printStackTrace();
         } finally {
             em.close();
         }
@@ -42,20 +50,29 @@ public class ServicioCarrito {
         EntityManager em = BootStrapServices.getEntityManager();
         try {
             em.getTransaction().begin();
+
             Carrito carrito = em.find(Carrito.class, (int)idCarrito);
+
             if (carrito != null) {
                 Producto productoDb = em.find(Producto.class, producto.getId());
+
+                if (carrito.getListaProducto() == null) {
+                    carrito.setListaProducto(new ArrayList<>());
+                }
+
                 carrito.getListaProducto().add(productoDb);
                 em.merge(carrito);
                 em.getTransaction().commit();
                 return true;
             }
+            return false;
         } catch (Exception e) {
-            em.getTransaction().rollback();
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            e.printStackTrace();
+            return false;
         } finally {
             em.close();
         }
-        return false;
     }
 
     public boolean eliminarProducto(long idCarrito, long idProducto) {
@@ -101,9 +118,7 @@ public class ServicioCarrito {
         return false;
     }
 
-    /**
-     * Pasa los productos del carrito temporal (sesión sin login) al carrito del usuario
-     */
+
     public boolean mergeCarritoLogin(Usuario usuario) {
         Usuario anonimo = Main.servicioUsuario.buscarPorUsername("");
         if (anonimo == null) return false;
