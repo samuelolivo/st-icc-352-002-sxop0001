@@ -2,7 +2,7 @@ package org.example;
 
 import io.javalin.Javalin;
 
-public class Main {
+public class  Main {
     public static void main(String[] args) {
         Javalin app1 = Javalin.create().start(7070);
         app1.get("/", ctx -> ctx.html(
