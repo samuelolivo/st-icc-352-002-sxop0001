@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Crear Evento</title>
+</head>
+<body class="container mt-5">
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h3 class="card-title mb-0">Nuevo Evento</h3>
+            </div>
+            <div class="card-body">
+                <form action="/admin/guardarEvento" method="post">
+
+                    <div class="mb-3">
+                        <label for="titulo" class="form-label">Título del Evento</label>
+                        <input type="text" id="titulo" name="titulo" class="form-control"
+                               placeholder="Ej: Conferencia de Programación" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="descripcion" class="form-label">Descripción del Evento</label>
+                        <textarea id="descripcion" name="descripcion" class="form-control" rows="3"
+                                  placeholder="Detalles sobre qué tratará el evento..." required></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="fechaHora" class="form-label">Fecha y Hora</label>
+                        <input type="datetime-local" id="fechaHora" name="fechaHora" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="lugar" class="form-label">Lugar / Ubicación</label>
+                        <input type="text" id="lugar" name="lugar" class="form-control"
+                               placeholder="Ej: Auditorio T-1, PUCMM" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="cupoMaximo" class="form-label">Cupo Máximo</label>
+                        <input type="number" id="cupoMaximo" name="cupoMaximo" class="form-control"
+                               placeholder="0" min="1" required>
+                        <div class="form-text">Indica el límite de personas que pueden inscribirse.</div>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="/eventos" class="btn btn-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-success">Guardar Evento</button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

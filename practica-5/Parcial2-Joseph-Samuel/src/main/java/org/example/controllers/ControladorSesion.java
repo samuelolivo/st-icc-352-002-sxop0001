@@ -98,7 +98,7 @@ public class ControladorSesion {
         ctx.redirect("/");
     }
 
-    public static void defaultPath(Context ctx) { ctx.redirect("/usuario/lista"); }
+    public static void defaultPath(Context ctx) { ctx.redirect("/eventos"); }
 
     public static void volver(Context ctx) {
         String path = ctx.sessionAttribute(Main.KeySession.REFERER.name());

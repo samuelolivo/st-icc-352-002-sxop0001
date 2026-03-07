@@ -8,6 +8,8 @@
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
 
         <class>org.example.models.Usuario</class>
+        <class>org.example.models.Evento</class>
+        <class>org.example.models.Inscripcion</class>
 
         <properties>
             <property name="jakarta.persistence.jdbc.url" value="jdbc:h2:./practica5;AUTO_SERVER=TRUE"/>

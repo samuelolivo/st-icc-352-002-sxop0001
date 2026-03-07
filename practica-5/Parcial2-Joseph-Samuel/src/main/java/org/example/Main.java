@@ -4,6 +4,7 @@ import io.javalin.Javalin;
 import io.javalin.http.staticfiles.Location;
 import io.javalin.rendering.template.JavalinThymeleaf;
 import org.example.controllers.*;
+import org.example.models.Usuario;
 import org.example.services.*;
 
 public class Main {
@@ -59,6 +60,28 @@ public class Main {
         app.get("/admin/usuario/editar/{id}", ControladorUsuario::vistaModificar);
         app.post("/admin/usuario/actualizar", ControladorUsuario::modificar);
         app.get("/admin/usuario/eliminar/{id}", ControladorUsuario::eliminar);
+
+
+
+        app.get("/eventos", ControladorEvento::listar);
+
+
+        app.get("/admin/eventos/crear", ControladorEvento::formularioCrear);
+        app.post("/admin/guardarEvento", ControladorEvento::guardar);
+
+
+        app.get("/admin/evento/editar/{id}", ControladorEvento::vistaModificar);
+        app.post("/admin/actualizarEvento", ControladorEvento::modificar);
+
+
+        app.get("/admin/evento/eliminar/{id}", ControladorEvento::eliminar);
+
+
+        app.post("/eventos/gestion/publicar/{id}", ControladorEvento::alternarPublicacion);
+
+
+        app.get("/evento/ver/{id}", ControladorEvento::vistaVer);
+
     }
 }
 
