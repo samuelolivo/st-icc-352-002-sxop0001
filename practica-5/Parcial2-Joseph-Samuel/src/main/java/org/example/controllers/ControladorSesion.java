@@ -5,7 +5,7 @@ import io.javalin.http.Cookie;
 import org.example.Main;
 import org.example.models.RolesUsuario;
 import org.example.models.Usuario;
-import org.example.services.ServicioLog; // Servicio JDBC
+import org.example.services.ServicioLog;
 import org.jasypt.util.text.BasicTextEncryptor;
 
 import java.util.HashMap;

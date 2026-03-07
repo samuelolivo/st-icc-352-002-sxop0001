@@ -20,13 +20,19 @@ dependencies {
     implementation 'io.javalin:javalin-rendering:6.3.0'
     implementation 'org.thymeleaf:thymeleaf:3.1.2.RELEASE'
 
+
     implementation 'org.hibernate.orm:hibernate-core:6.4.4.Final'
+
+
     implementation 'com.h2database:h2:2.2.224'
-    implementation 'org.postgresql:postgresql:42.7.2'
+
+
+    implementation 'com.google.zxing:core:3.5.3'
+    implementation 'com.google.zxing:javase:3.5.3'
 
     implementation 'org.jasypt:jasypt:1.9.3'
-
     implementation 'org.slf4j:slf4j-simple:2.0.12'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.0'
     testImplementation platform('org.junit:junit-bom:5.10.2')
     testImplementation 'org.junit.jupiter:junit-jupiter'
 }
