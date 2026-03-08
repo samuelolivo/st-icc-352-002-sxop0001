@@ -54,6 +54,13 @@ public class ControladorSesion {
         }
     }
 
+    public static void organizadorValido(Context ctx) {
+        Usuario usuario = ctx.sessionAttribute(Main.KeySession.USUARIO.name());
+        if (usuario == null || usuario.getRol() == RolesUsuario.PARTICIPANTE) {
+            ctx.redirect("/");
+        }
+    }
+
     public static void vistaLogin(Context ctx) {
         Map<String, Object> model = new HashMap<>();
         if (ctx.queryParam("error") != null) {
@@ -98,7 +105,7 @@ public class ControladorSesion {
         ctx.redirect("/");
     }
 
-    public static void defaultPath(Context ctx) { ctx.redirect("/eventos"); }
+    public static void defaultPath(Context ctx) { ctx.redirect("/evento/lista"); }
 
     public static void volver(Context ctx) {
         String path = ctx.sessionAttribute(Main.KeySession.REFERER.name());

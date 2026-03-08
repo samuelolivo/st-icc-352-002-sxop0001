@@ -21,10 +21,11 @@ public class ControladorEvento {
         model.put("eventos", eventos);
         model.put("usuario", usuarioLogueado);
 
+        ctx.sessionAttribute(Main.KeySession.REFERER.name(), "/evento/lista");
         ctx.render("templates/eventos.html", model);
     }
 
-    public static void formularioCrear(Context ctx) {
+    public static void vistaCrear(Context ctx) {
         ctx.render("templates/admin/crearEvento.html");
     }
 
@@ -45,8 +46,7 @@ public class ControladorEvento {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        ctx.redirect("/eventos");
+        ctx.redirect("/evento/lista");
     }
 
 
@@ -60,7 +60,7 @@ public class ControladorEvento {
             model.put("evento", evento);
             ctx.render("templates/admin/editarEvento.html", model);
         } else {
-            ctx.redirect("/eventos");
+            ctx.redirect("/evento/lista");
         }
     }
 
@@ -81,7 +81,7 @@ public class ControladorEvento {
                 ex.printStackTrace();
             }
         }
-        ctx.redirect("/eventos");
+        ctx.redirect("/evento/lista");
     }
 
 
@@ -94,13 +94,13 @@ public class ControladorEvento {
             e.setPublicado(!e.isPublicado());
             ServicioEvento.getInstancia().actualizar(e);
         }
-        ctx.redirect("/eventos");
+        ctx.redirect("/evento/lista");
     }
 
     public static void eliminar(Context ctx) {
         Long id = ctx.pathParamAsClass("id", Long.class).get();
         ServicioEvento.getInstancia().eliminar(id);
-        ctx.redirect("/eventos");
+        ctx.redirect("/evento/lista");
     }
 
     public static void vistaVer(Context ctx) {
@@ -111,9 +111,9 @@ public class ControladorEvento {
             Map<String, Object> model = new HashMap<>();
             model.put("evento", evento);
             model.put("usuario", ctx.sessionAttribute(Main.KeySession.USUARIO.name()));
-            ctx.render("verEvento.html", model);
+            ctx.render("templates/verEvento.html", model);
         } else {
-            ctx.redirect("/eventos");
+            ctx.redirect("/evento/lista");
         }
     }
 }

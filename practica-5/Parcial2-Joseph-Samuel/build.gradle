@@ -16,9 +16,9 @@ repositories {
 
 dependencies {
 
-    implementation 'io.javalin:javalin:6.7.0'
-    implementation 'io.javalin:javalin-rendering:6.3.0'
-    implementation 'org.thymeleaf:thymeleaf:3.1.2.RELEASE'
+    implementation 'io.javalin:javalin:7.0.1'
+    implementation 'io.javalin:javalin-rendering-thymeleaf:7.0.1'
+
     implementation 'org.postgresql:postgresql:42.7.2'
 
     implementation 'org.hibernate.orm:hibernate-core:6.4.4.Final'

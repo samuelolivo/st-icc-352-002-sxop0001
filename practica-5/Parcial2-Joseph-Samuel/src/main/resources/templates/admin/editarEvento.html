@@ -44,7 +44,7 @@
     </div>
 
     <div class="col-md-8 form-side">
-      <form action="/admin/actualizarEvento" method="post">
+      <form action="/organizador/evento/actualizar" method="post">
         <input type="hidden" name="id" th:value="${evento.id}">
 
         <div class="mb-4">
@@ -84,7 +84,7 @@
           <button type="submit" class="btn btn-danger btn-lg flex-grow-1">
             Actualizar ahora
           </button>
-          <a href="/eventos" class="btn btn-outline-secondary btn-lg">
+          <a href="/volver" class="btn btn-outline-secondary btn-lg">
             Cancelar
           </a>
         </div>

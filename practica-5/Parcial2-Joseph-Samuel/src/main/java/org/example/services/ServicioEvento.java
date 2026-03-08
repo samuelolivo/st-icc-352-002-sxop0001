@@ -1,9 +1,12 @@
 package org.example.services;
 
+import org.example.models.EstadoObjeto;
 import org.example.models.Evento;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
+import org.example.models.Usuario;
+
 import java.util.List;
 
 public class ServicioEvento {
@@ -24,6 +27,8 @@ public class ServicioEvento {
     public Evento findById(Long id) {
         try (EntityManager em = emf.createEntityManager()) {
             return em.find(Evento.class, id);
+        } catch (Exception ex) {
+            return null;
         }
     }
 
@@ -49,15 +54,22 @@ public class ServicioEvento {
         }
     }
 
-    public void eliminar(Long id) {
-        EntityManager em = emf.createEntityManager();
+    public boolean eliminar(long id) {
+        EntityManager em = BootStrapServices.getEntityManager();
         try {
             em.getTransaction().begin();
-            Evento e = em.find(Evento.class, id);
-            if (e != null) em.remove(e);
-            em.getTransaction().commit();
+            Evento evento = em.find(Evento.class, id);
+            if (evento != null) {
+                evento.setEstado(EstadoObjeto.INACTIVO);
+                em.merge(evento);
+                em.getTransaction().commit();
+                return true;
+            }
+        } catch (Exception e) {
+            em.getTransaction().rollback();
         } finally {
             em.close();
         }
+        return false;
     }
 }

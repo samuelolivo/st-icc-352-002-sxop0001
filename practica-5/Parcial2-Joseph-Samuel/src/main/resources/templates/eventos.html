@@ -18,37 +18,19 @@
 </head>
 <body class="container mt-5">
 
+<div th:replace="templates/menu.html :: menu"></div>
+
 <div class="row align-items-center mb-2">
   <div class="col-md-6">
     <h2 class="fw-bold text-dark">Listado de Eventos</h2>
   </div>
 
-  <div class="d-flex justify-content-end align-items-center gap-2">
-    <div class="d-flex justify-content-end align-items-center gap-2">
-      <a href="/usuarios" class="btn btn-secondary position-relative text-white fw-bold">
-        Usuarios </a>
-      <a href="/mis-inscripciones" class="btn btn-secondary text-white fw-bold d-inline-flex align-items-center gap-2">
-        <span>Mis Eventos</span>
-      </a>
-      <a th:if="${usuario != null && usuario.rol.name() == 'ADMIN'}" href="/admin/estadisticas" class="btn btn-secondary text-white fw-bold">Estadísticas</a>
-    </div>
 
-    <div th:if="${usuario == null or usuario.rol.name() == 'NO_AUTENTICADO'}">
-      <a href="/login" class="btn btn-primary text-white fw-bold">Iniciar Sesión</a>
-    </div>
-
-    <div th:if="${usuario != null && usuario.rol.name() != 'NO_AUTENTICADO'}" class="d-flex align-items-center gap-2">
-      <span class="text-muted small" th:text="${'Hola, ' + usuario.usuario}"></span>
-      <a href="/logout" class="btn btn-outline-danger fw-bold">Cerrar Sesión</a>
-    </div>
-  </div>
-</div>
-
-<div th:if="${usuario != null and usuario.rol.name() == 'ADMIN'}" class="row mb-4">
+<div th:if="${usuario != null and (usuario.rol.name() == 'ADMIN' || usuario.rol.name() == 'ORGANIZADOR')}" class="row mb-4">
   <div class="col-12">
     <hr>
     <div class="d-flex gap-2 mt-2">
-      <a href="/admin/eventos/crear" class="btn btn-success px-4 shadow-sm">Crear evento</a>
+      <a href="/organizador/evento/crear" class="btn btn-success px-4 shadow-sm">Crear evento</a>
       <a id="btnEditar" href="#" class="btn btn-warning disabled px-4 shadow-sm">Editar</a>
       <a id="btnEliminar" href="#" class="btn btn-danger disabled px-4 shadow-sm"
          onclick="return confirm('Seguro que deseas eliminar este evento?')">Eliminar</a>
@@ -79,8 +61,8 @@
       <div class="d-flex gap-2 justify-content-center">
         <a th:href="'/evento/ver/' + ${e.id}" class="btn btn-sm btn-outline-info fw-bold">Ver</a>
 
-        <form th:if="${usuario != null && usuario.rol.name() == 'ADMIN'}"
-              th:action="'/eventos/gestion/publicar/' + ${e.id}" method="POST" style="display:inline;">
+        <form th:if="${usuario != null and (usuario.rol.name() == 'ADMIN' || usuario.rol.name() == 'ORGANIZADOR')}"
+              th:action="'/organizador/evento/publicar/' + ${e.id}" method="POST" style="display:inline;">
           <button type="submit" class="btn btn-sm btn-outline-primary fw-bold"
                   th:text="${e.publicado} ? 'Ocultar' : 'Publicar'"></button>
         </form>
@@ -106,10 +88,10 @@
 
       if (btnEditar && btnEliminar) {
         btnEditar.classList.remove('disabled');
-        btnEditar.href = `/admin/evento/editar/${id}`;
+        btnEditar.href = `/organizador/evento/editar/${id}`;
 
         btnEliminar.classList.remove('disabled');
-        btnEliminar.href = `/admin/evento/eliminar/${id}`;
+        btnEliminar.href = `/organizador/evento/eliminar/${id}`;
       }
     });
   });

@@ -33,6 +33,9 @@ public class Inscripcion {
     @Column(name = "token_qr", unique = true)
     private String tokenQr;
 
+    @Enumerated(EnumType.STRING)
+    private EstadoObjeto estado;
+
     public Inscripcion() {
     }
 
@@ -60,4 +63,7 @@ public class Inscripcion {
 
     public LocalDateTime getFechaAsistencia() { return fechaAsistencia; }
     public void setFechaAsistencia(LocalDateTime fechaAsistencia) { this.fechaAsistencia = fechaAsistencia; }
+
+    public EstadoObjeto getEstado() { return estado; }
+    public void setEstado(EstadoObjeto estado) { this.estado = estado; }
 }

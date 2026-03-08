@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title th:text="'Evento - ' + ${evento.titulo}">Ver Evento</title>
+    <style>
+        body { background-color: #f8f9fa; }
+        .evento-header {
+            background: linear-gradient(135deg, #198754 0%, #0f5132 100%);
+            color: white;
+            border-radius: 15px 15px 0 0;
+            padding: 40px;
+        }
+        .evento-body {
+            background: white;
+            border-radius: 0 0 15px 15px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+        }
+        .info-card {
+            background: #f8f9fa;
+            border-left: 4px solid #198754;
+            border-radius: 8px;
+            padding: 16px 20px;
+        }
+        .info-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #6c757d;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .info-value {
+            font-size: 1rem;
+            font-weight: 500;
+            color: #212529;
+        }
+        .progress { height: 10px; border-radius: 5px; }
+    </style>
+</head>
+<body class="container mt-5 mb-5">
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+
+        <!-- Header -->
+        <div class="evento-header">
+            <span class="badge bg-light text-dark mb-2">ID #<span th:text="${evento.id}"></span></span>
+            <h1 class="fw-bold mb-2" th:text="${evento.titulo}">Título del Evento</h1>
+            <div class="d-flex gap-2">
+                <span th:if="${evento.publicado}" class="badge bg-success">Publicado</span>
+                <span th:unless="${evento.publicado}" class="badge bg-secondary">Borrador</span>
+                <span th:if="${!evento.tieneCupo()}" class="badge bg-danger">Cupo lleno</span>
+                <span th:if="${evento.tieneCupo()}" class="badge bg-info text-dark">Con disponibilidad</span>
+            </div>
+        </div>
+
+        <!-- Body -->
+        <div class="evento-body">
+
+            <!-- Descripción -->
+            <div class="mb-4">
+                <h5 class="fw-bold text-secondary mb-2">Descripción</h5>
+                <p class="fs-5 text-dark" th:text="${evento.descripcion}">Descripción del evento...</p>
+            </div>
+
+            <hr>
+
+            <!-- Info grid -->
+            <div class="row g-3 my-2">
+                <div class="col-md-6">
+                    <div class="info-card">
+                        <div class="info-label">Fecha y Hora</div>
+                        <div class="info-value"
+                             th:text="${#temporals.format(evento.fechaHora, 'dd/MM/yyyy HH:mm')}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="info-card">
+                        <div class="info-label">Lugar</div>
+                        <div class="info-value" th:text="${evento.lugar}"></div>
+                    </div>
+                </div>
+
+                <div class="col-md-6" th:if="${evento.organizador != null}">
+                    <div class="info-card">
+                        <div class="info-label">🧑‍💼 Organizador</div>
+                        <div class="info-value" th:text="${evento.organizador.getUsuario()}"></div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="info-card">
+                        <div class="info-label"> <span th:text="${evento.inscripciones.size()}">0</span>
+                            /
+                            <span th:text="${evento.cupoMaximo}">0</span> Personas inscritas
+
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar"
+                                 th:classappend="${evento.tieneCupo()} ? 'bg-success' : 'bg-danger'"
+                                 role="progressbar"
+                                 th:style="'width: ' + (${evento.inscripciones.size()} * 100 / ${evento.cupoMaximo}) + '%'">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <!-- Acciones -->
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="/volver" class="btn btn-outline-secondary">Volver</a>
+
+                <th:block th:if="${usuario != null and (usuario.rol.name() == 'ADMIN' || usuario.rol.name() == 'ORGANIZADOR')}">
+                    <a th:href="'/organizador/evento/editar/' + ${evento.id}"
+                       class="btn btn-warning fw-bold">Editar</a>
+
+                    <a th:href="'/organizador/evento/eliminar/' + ${evento.id}"
+                       class="btn btn-danger fw-bold"
+                       onclick="return confirm('¿Seguro que deseas eliminar este evento?')">Eliminar</a>
+
+                    <form th:action="'/organizador/evento/publicar/' + ${evento.id}" method="POST" style="display:inline;">
+                        <button type="submit" class="btn btn-outline-primary fw-bold"
+                                th:text="${evento.publicado} ? 'Ocultar' : 'Publicar'">Publicar</button>
+                    </form>
+
+                </th:block>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

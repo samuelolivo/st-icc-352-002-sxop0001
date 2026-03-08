@@ -32,12 +32,14 @@ public class Evento {
     @Column(nullable = false)
     private boolean publicado = false; //
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     private Usuario organizador;
 
-
-    @OneToMany(mappedBy = "evento", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "evento", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Inscripcion> inscripciones;
+
+    @Enumerated(EnumType.STRING)
+    private EstadoObjeto estado;
 
     public Evento() {
     }
@@ -52,35 +54,85 @@ public class Evento {
         this.publicado = false;
     }
 
-
-    public boolean tieneCupo() {
-        return inscripciones.size() < cupoMaximo; //
+    public Long getId() {
+        return id;
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getTitulo() { return titulo; }
-    public void setTitulo(String titulo) { this.titulo = titulo; }
+    public String getTitulo() {
+        return titulo;
+    }
 
-    public String getDescripcion() { return descripcion; }
-    public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
+    public void setTitulo(String titulo) {
+        this.titulo = titulo;
+    }
 
-    public LocalDateTime getFechaHora() { return fechaHora; }
-    public void setFechaHora(LocalDateTime fechaHora) { this.fechaHora = fechaHora; }
+    public String getDescripcion() {
+        return descripcion;
+    }
 
-    public String getLugar() { return lugar; }
-    public void setLugar(String lugar) { this.lugar = lugar; }
+    public void setDescripcion(String descripcion) {
+        this.descripcion = descripcion;
+    }
 
-    public int getCupoMaximo() { return cupoMaximo; }
-    public void setCupoMaximo(int cupoMaximo) { this.cupoMaximo = cupoMaximo; }
+    public LocalDateTime getFechaHora() {
+        return fechaHora;
+    }
 
-    public boolean isPublicado() { return publicado; }
-    public void setPublicado(boolean publicado) { this.publicado = publicado; }
+    public void setFechaHora(LocalDateTime fechaHora) {
+        this.fechaHora = fechaHora;
+    }
 
-    public Usuario getOrganizador() { return organizador; }
-    public void setOrganizador(Usuario organizador) { this.organizador = organizador; }
+    public String getLugar() {
+        return lugar;
+    }
 
-    public List<Inscripcion> getInscripciones() { return inscripciones; }
-    public void setInscripciones(List<Inscripcion> inscripciones) { this.inscripciones = inscripciones; }
+    public void setLugar(String lugar) {
+        this.lugar = lugar;
+    }
+
+    public int getCupoMaximo() {
+        return cupoMaximo;
+    }
+
+    public void setCupoMaximo(int cupoMaximo) {
+        this.cupoMaximo = cupoMaximo;
+    }
+
+    public boolean isPublicado() {
+        return publicado;
+    }
+
+    public void setPublicado(boolean publicado) {
+        this.publicado = publicado;
+    }
+
+    public Usuario getOrganizador() {
+        return organizador;
+    }
+
+    public void setOrganizador(Usuario organizador) {
+        this.organizador = organizador;
+    }
+
+    public List<Inscripcion> getInscripciones() {
+        return inscripciones;
+    }
+
+    public EstadoObjeto getEstado() {
+        return estado;
+    }
+
+    public void setEstado(EstadoObjeto estado) {this.estado = estado;}
+
+    public void setInscripciones(List<Inscripcion> inscripciones) {
+        this.inscripciones = inscripciones;
+    }
+
+    public boolean tieneCupo() {
+        return (getInscripciones().size() < cupoMaximo);
+    }
 }
