@@ -60,6 +60,14 @@ public class Main {
             config.routes.post("/organizador/evento/publicar/{id}", ControladorEvento::alternarPublicacion);
             config.routes.get("/evento/ver/{id}", ControladorEvento::vistaVer);
 
+
+            config.routes.post("/inscripcion/inscribirse/{id}", ControladorInscripcion::inscribirse);
+            config.routes.get("/inscripcion/mis-inscripciones",       ControladorInscripcion::misInscripciones);
+            config.routes.post("/inscripcion/cancelar/{id}",          ControladorInscripcion::cancelar);
+            config.routes.get("/inscripcion/qr/{id}",                 ControladorInscripcion::verQr);
+            config.routes.get("/organizador/inscripcion/escanear/{id}", ControladorInscripcion::vistaEscanear);
+            config.routes.post("/organizador/inscripcion/validar",    ControladorInscripcion::validarQr);
+
             config.fileRenderer(new JavalinThymeleaf());
         });
 
