@@ -44,6 +44,7 @@ public class Inscripcion {
         this.usuario = usuario;
         this.fechaInscripcion = LocalDateTime.now();
         this.tokenQr = UUID.randomUUID().toString();
+        this.estado = EstadoObjeto.ACTIVO;
     }
 
     public Long getId() { return id; }

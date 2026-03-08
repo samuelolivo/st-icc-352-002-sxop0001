@@ -52,6 +52,7 @@ public class Evento {
         this.cupoMaximo = cupoMaximo;
         this.organizador = organizador;
         this.publicado = false;
+        this.estado = EstadoObjeto.ACTIVO;
     }
 
     public Long getId() {

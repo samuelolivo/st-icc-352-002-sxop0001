@@ -2,7 +2,9 @@ package org.example.controllers;
 
 import io.javalin.http.Context;
 import org.example.Main;
+import org.example.models.EstadoObjeto;
 import org.example.models.Evento;
+import org.example.models.RolesUsuario;
 import org.example.models.Usuario;
 import org.example.services.ServicioEvento;
 
@@ -15,7 +17,14 @@ public class ControladorEvento {
 
     public static void listar(Context ctx) {
         Usuario usuarioLogueado = ctx.sessionAttribute(Main.KeySession.USUARIO.name());
-        List<Evento> eventos = ServicioEvento.getInstancia().findAll();
+        List<Evento> eventos;
+
+        if (usuarioLogueado != null && (usuarioLogueado.getRol() == RolesUsuario.ADMIN || usuarioLogueado.getRol() == RolesUsuario.ORGANIZADOR)) {
+            eventos = ServicioEvento.getInstancia().findAllActive();
+        }
+        else {
+            eventos = ServicioEvento.getInstancia().findAllActiveAndPublic();
+        }
 
         Map<String, Object> model = new HashMap<>();
         model.put("eventos", eventos);
@@ -41,6 +50,7 @@ public class ControladorEvento {
             evento.setCupoMaximo(ctx.formParamAsClass("cupoMaximo", Integer.class).get());
             evento.setOrganizador(loginUser);
             evento.setPublicado(false);
+            evento.setEstado(EstadoObjeto.ACTIVO);
 
             ServicioEvento.getInstancia().crear(evento);
         } catch (Exception e) {

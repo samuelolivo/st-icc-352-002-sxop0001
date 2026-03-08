@@ -24,6 +24,23 @@ public class ServicioEvento {
         }
     }
 
+    public List<Evento> findAllActive() {
+        try (EntityManager em = emf.createEntityManager()) {
+            return em.createQuery("from Evento e where e.estado = :est", Evento.class)
+                    .setParameter("est", EstadoObjeto.ACTIVO)
+                    .getResultList();
+        }
+    }
+
+    public List<Evento> findAllActiveAndPublic() {
+        try (EntityManager em = emf.createEntityManager()) {
+            return em.createQuery("from Evento e where e.estado = :est and e.publicado = :pub", Evento.class)
+                    .setParameter("est", EstadoObjeto.ACTIVO)
+                    .setParameter("pub", true)
+                    .getResultList();
+        }
+    }
+
     public Evento findById(Long id) {
         try (EntityManager em = emf.createEntityManager()) {
             return em.find(Evento.class, id);
