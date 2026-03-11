@@ -45,8 +45,8 @@
     <span class="status-badge">Autenticación Requerida</span>
     <h1 class="text-center fw-bold mb-4">Ingresar</h1>
 
-    <div th:if="${param.error}" class="alert alert-danger py-2" role="alert">
-        <small>Usuario o contraseña incorrectos</small>
+    <div th:if="${error}" class="alert alert-danger py-2" role="alert">
+        <small th:text="${error}"></small>
     </div>
 
     <form action="/procesarLogin" method="post">

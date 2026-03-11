@@ -37,13 +37,13 @@ public class Main {
             config.routes.get("/", ControladorSesion::defaultPath);
             config.routes.get("/volver", ControladorSesion::volver);
 
-
             config.routes.get("/login", ControladorSesion::vistaLogin);
             config.routes.post("/procesarLogin", ControladorSesion::procesarLogin);
             config.routes.get("/logout", ControladorSesion::logout);
 
 
             config.routes.get("/usuario/lista", ControladorUsuario::vistaListar);
+            config.routes.post("/admin/usuario/bloquear", ControladorUsuario::bloquear);
             config.routes.get("/admin/usuario/crear", ControladorUsuario::vistaCrear);
             config.routes.post("/admin/usuario/guardar", ControladorUsuario::crear);
             config.routes.get("/admin/usuario/editar/{id}", ControladorUsuario::vistaModificar);

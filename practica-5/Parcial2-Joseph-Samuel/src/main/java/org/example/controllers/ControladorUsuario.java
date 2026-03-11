@@ -24,6 +24,12 @@ public class ControladorUsuario {
         ctx.render("templates/usuarios.html", model);
     }
 
+    public static void bloquear(Context ctx) {
+        int id = Integer.parseInt(ctx.formParam("id"));
+        servicioUsuario.bloquear(id);
+        ctx.redirect("/usuario/lista");
+    }
+
     public static void vistaCrear(Context ctx) {
         Map<String, Object> model = new HashMap<>();
         model.put("roles", RolesUsuario.rolesSeleccionables());

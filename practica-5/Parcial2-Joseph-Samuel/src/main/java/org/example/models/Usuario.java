@@ -17,10 +17,15 @@ public class Usuario {
     private String password;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private RolesUsuario rol;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private EstadoObjeto estado;
+
+    @Column(nullable = false)
+    private boolean bloqueado = false;
 
 
     public Usuario() {
@@ -72,6 +77,14 @@ public class Usuario {
 
     public void setEstado(EstadoObjeto estado) {
         this.estado = estado;
+    }
+
+    public boolean isBloqueado() {
+        return bloqueado;
+    }
+
+    public void setBloqueado(boolean bloqueado) {
+        this.bloqueado = bloqueado;
     }
 
     public static Usuario usuarioInvitado() {
