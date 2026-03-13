@@ -82,6 +82,14 @@ public class Main {
 
         app.get("/evento/ver/{id}", ControladorEvento::vistaVer);
 
+        app.get("/inscripcion/inscribirse/{id}", ControladorInscripcion::inscribirse);
+        app.get("/inscripcion/desinscribirse/{id}", ControladorInscripcion::desinscribirse);
+        app.get("/mis-inscripciones", ControladorInscripcion::misinscripciones);
+
+        app.get("/admin/escanear-qr", ControladorInscripcion::vistaEscanearQR);
+        app.post("/api/qr/validar", ControladorInscripcion::validarQR);
+        app.get("/api/qr/obtener/{id}", ControladorInscripcion::obtenerQR);
+
     }
 }
 

@@ -104,14 +104,29 @@ public class ControladorEvento {
     }
 
     public static void vistaVer(Context ctx) {
+
         Long id = ctx.pathParamAsClass("id", Long.class).get();
         Evento evento = ServicioEvento.getInstancia().findById(id);
 
+
+        Usuario usuarioLogueado = ctx.sessionAttribute(Main.KeySession.USUARIO.name());
+
         if (evento != null) {
+            boolean estaInscrito = false;
+
+            if (usuarioLogueado != null && evento.getInscripciones() != null) {
+                estaInscrito = evento.getInscripciones().stream()
+                        .anyMatch(ins -> {
+                            return ins.getUsuario().getId() == usuarioLogueado.getId();
+                        });
+            }
+
             Map<String, Object> model = new HashMap<>();
             model.put("evento", evento);
-            model.put("usuario", ctx.sessionAttribute(Main.KeySession.USUARIO.name()));
-            ctx.render("verEvento.html", model);
+            model.put("usuario", usuarioLogueado);
+            model.put("estaInscrito", estaInscrito);
+
+            ctx.render("templates/verEvento.html", model);
         } else {
             ctx.redirect("/eventos");
         }

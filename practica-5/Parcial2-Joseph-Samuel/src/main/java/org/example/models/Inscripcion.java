@@ -60,4 +60,7 @@ public class Inscripcion {
 
     public LocalDateTime getFechaAsistencia() { return fechaAsistencia; }
     public void setFechaAsistencia(LocalDateTime fechaAsistencia) { this.fechaAsistencia = fechaAsistencia; }
+
+    public LocalDateTime getFechaInscripcion() { return fechaInscripcion; }
+    public void setFechaInscripcion(LocalDateTime fechaInscripcion) { this.fechaInscripcion = fechaInscripcion; }
 }

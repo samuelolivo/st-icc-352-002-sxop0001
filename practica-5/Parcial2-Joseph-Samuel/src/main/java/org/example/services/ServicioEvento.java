@@ -17,13 +17,20 @@ public class ServicioEvento {
 
     public List<Evento> findAll() {
         try (EntityManager em = emf.createEntityManager()) {
-            return em.createQuery("from Evento", Evento.class).getResultList();
+            return em.createQuery("SELECT DISTINCT e FROM Evento e LEFT JOIN FETCH e.organizador", Evento.class)
+                    .getResultList();
         }
     }
 
     public Evento findById(Long id) {
         try (EntityManager em = emf.createEntityManager()) {
-            return em.find(Evento.class, id);
+            return em.createQuery(
+                            "SELECT e FROM Evento e LEFT JOIN FETCH e.organizador LEFT JOIN FETCH e.inscripciones WHERE e.id = :id",
+                            Evento.class)
+                    .setParameter("id", id)
+                    .getSingleResult();
+        } catch (Exception e) {
+            return null;
         }
     }
 

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <title>Ver Evento</title>
+    <style>
+        body { background-color: #f8f9fa; }
+        .card { border: none; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+        .card-header { background-color: #0d6efd; color: white; font-weight: bold; }
+        .badge-cupo { font-size: 1rem; padding: 0.6rem 1.2rem; }
+        .info-label { color: #6c757d; font-weight: 600; font-size: 0.9rem; text-transform: uppercase; }
+        .qr-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            text-align: center;
+            margin-top: 2rem;
+        }
+        #qrCode {
+            max-width: 300px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body class="container mt-5 mb-5">
+
+<div class="row justify-content-center" th:if="${evento != null}">
+    <div class="col-lg-8">
+
+
+        <div th:if="${param.success != null && param.success[0] == '1'}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>
+            <strong>¡Inscripción exitosa!</strong> Te has inscrito en el evento correctamente.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <div th:if="${param.success != null && param.success[0] == '2'}" class="alert alert-warning alert-dismissible fade show" role="alert">
+            <i class="bi bi-info-circle me-2"></i>
+            Te has desinscrito del evento correctamente.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+
+        <div th:if="${param.error != null}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <span th:if="${param.error[0] == '1'}">Ya estás inscrito en este evento</span>
+            <span th:if="${param.error[0] == '2'}">Este evento está lleno</span>
+            <span th:if="${param.error[0] == '3'}">Error al procesar la solicitud</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+
+        <div class="modal fade" id="qrModal" tabindex="-1" aria-labelledby="qrModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title" id="qrModalLabel">
+                            <i class="bi bi-qr-code me-2"></i> Tu Código QR de Inscripción
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <div id="qrCode"></div>
+                        <p class="text-muted mt-3 small">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Presenta este código QR el día del evento para registrar tu asistencia.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <a href="/eventos" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Volver a la lista
+            </a>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header py-3">
+                <h2 th:text="${evento.titulo}" class="mb-0 h4"></h2>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6 mb-3 mb-md-0">
+                        <p class="info-label mb-1">Fecha y Hora</p>
+                        <p class="h6"><i class="bi bi-calendar3 me-2 text-primary"></i>
+                            <span th:text="${evento.fechaHora != null ? #temporals.format(evento.fechaHora, 'dd/MM/yyyy HH:mm') : 'No definida'}"></span>
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="info-label mb-1">Ubicación</p>
+                        <p class="h6"><i class="bi bi-geo-alt me-2 text-danger"></i>
+                            <span th:text="${evento.lugar}"></span>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-6 mb-3 mb-md-0">
+                        <p class="info-label mb-1">Organizado por</p>
+                        <p th:text="${evento.organizador != null ? evento.organizador.usuario : 'Sin asignar'}"></p>
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <p class="info-label mb-1">Cupos Disponibles</p>
+                        <span class="badge bg-primary badge-cupo"
+                              th:text="${evento.cupoMaximo - (evento.inscripciones != null ? evento.inscripciones.size() : 0)} + ' / ' + ${evento.cupoMaximo}">
+                        </span>
+                    </div>
+                </div>
+
+                <hr>
+                <div class="mb-2 mt-4">
+                    <p class="info-label mb-2">Sobre este evento</p>
+                    <p th:text="${evento.descripcion}" class="text-secondary" style="white-space: pre-wrap; line-height: 1.6;"></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 bg-white p-4 shadow-sm">
+
+            <div th:if="${usuario == null}" class="text-center">
+                <p class="text-muted mb-3">Inicia sesión para poder reservar tu cupo</p>
+                <a href="/login" class="btn btn-primary btn-lg px-5">Iniciar Sesión</a>
+            </div>
+
+            <div th:if="${usuario != null}">
+
+                <div th:if="${estaInscrito}">
+                    <div class="alert alert-info border-0 bg-light-info text-center py-3">
+                        <i class="bi bi-info-circle-fill me-2"></i> Tienes una inscripción activa para este evento.
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <button type="button" class="btn btn-success btn-lg w-100 fw-bold" data-bs-toggle="modal" data-bs-target="#qrModal" th:if="${param.inscripcionId != null}">
+                                <i class="bi bi-qr-code me-2"></i> Ver Código QR
+                            </button>
+                        </div>
+                        <div class="col-md-6">
+                            <form th:action="'/inscripcion/desinscribirse/' + ${evento.id}" method="get" style="display: block;">
+                                <button type="submit" class="btn btn-warning btn-lg w-100 fw-bold">
+                                    <i class="bi bi-x-circle me-2"></i> Cancelar Inscripción
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div th:if="${!estaInscrito}">
+                    <div th:if="${evento.tieneCupo()}">
+                        <form th:action="'/inscripcion/inscribirse/' + ${evento.id}" method="get">
+                            <button type="submit" class="btn btn-success btn-lg w-100 fw-bold">
+                                <i class="bi bi-person-plus-fill me-2"></i> Inscribirme
+                            </button>
+                        </form>
+                    </div>
+                    <div th:if="${!evento.tieneCupo()}" class="alert alert-danger text-center py-3 mb-0">
+                        <i class="bi bi-slash-circle me-2"></i> Lo sentimos, este evento ha alcanzado el límite de cupos.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-5 card">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0 h6"><i class="bi bi-people-fill me-2"></i> Personas Inscritas</h5>
+            </div>
+            <div class="card-body p-0">
+                <div th:if="${not #lists.isEmpty(evento.inscripciones)}">
+                    <div class="list-group list-group-flush">
+                        <div th:each="ins : ${evento.inscripciones}" class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="fw-bold" th:text="${ins.usuario.usuario}"></span>
+                                <br>
+                                <small class="text-muted" th:text="${ins.fechaInscripcion != null ? #temporals.format(ins.fechaInscripcion, 'dd/MM/yyyy HH:mm') : 'N/A'}"></small>
+                            </div>
+                            <span th:if="${ins.asistio}" class="badge bg-success rounded-pill">Asistió</span>
+                            <span th:if="${!ins.asistio}" class="badge bg-light text-dark border rounded-pill">Pendiente</span>
+                        </div>
+                    </div>
+                </div>
+                <div th:if="${#lists.isEmpty(evento.inscripciones)}" class="text-center py-4 text-muted">
+                    <i class="bi bi-inbox h1 d-block mb-2 text-light"></i>
+                    Aún no hay participantes registrados.
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+    let qrActual = null;
+
+    document.getElementById('qrModal').addEventListener('show.bs.modal', function () {
+        const inscripcionId = new URLSearchParams(window.location.search).get('inscripcionId');
+
+        if (inscripcionId) {
+            console.log('Obteniendo QR para inscripción:', inscripcionId);
+
+            fetch('/api/qr/obtener/' + inscripcionId)
+                .then(response => {
+                    console.log('Status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Datos recibidos:', data);
+
+                    if (data.success && data.data) {
+
+                        const qrContainer = document.getElementById('qrCode');
+                        qrContainer.innerHTML = '';
+
+                        console.log('Generando QR con datos:', data.data);
+
+                        try {
+                            qrActual = new QRCode(qrContainer, {
+                                text: data.data,
+                                width: 250,
+                                height: 250,
+                                colorDark: '#000000',
+                                colorLight: '#ffffff',
+                                correctLevel: QRCode.CorrectLevel.H
+                            });
+                            console.log('QR generado exitosamente');
+                        } catch (err) {
+                            console.error('Error generando QR:', err);
+                            qrContainer.innerHTML = '<div class="alert alert-danger">Error al generar QR</div>';
+                        }
+                    } else {
+                        console.error('Respuesta inválida:', data);
+                        document.getElementById('qrCode').innerHTML = '<div class="alert alert-danger">No se pudo obtener el QR</div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error en fetch:', error);
+                    document.getElementById('qrCode').innerHTML = '<div class="alert alert-danger">Error al obtener el QR</div>';
+                });
+        } else {
+            console.warn('No se encontró inscripcionId en URL');
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        if (new URLSearchParams(window.location.search).get('success') === '1') {
+            console.log('Inscripcion exitosa, abriendo modal');
+            setTimeout(() => {
+                const modalElement = document.getElementById('qrModal');
+                if (modalElement) {
+                    const modal = new bootstrap.Modal(modalElement);
+                    modal.show();
+                } else {
+                    console.error('No se encontró modal con ID qrModal');
+                }
+            }, 500);
+        }
+    });
+</script>
+
+</body>
+</html>

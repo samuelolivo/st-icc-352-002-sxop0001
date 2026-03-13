@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <title>Mis Inscripciones</title>
+    <style>
+        body { background-color: #f8f9fa; }
+        .table-hover tbody tr:hover {
+            background-color: rgba(13, 110, 253, 0.1);
+            cursor: pointer;
+        }
+        .table { background: white; border-radius: 8px; overflow: hidden; }
+        .card { border: none; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+        .card-header { background-color: #0d6efd; color: white; font-weight: bold; }
+        .qr-container {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+        #qrCode {
+            max-width: 250px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body class="container mt-5 mb-5">
+
+<!-- Modal para mostrar QR -->
+<div class="modal fade" id="qrModal" tabindex="-1" aria-labelledby="qrModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="qrModalLabel">
+                    <i class="bi bi-qr-code me-2"></i> Tu Código QR
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div id="qrCode"></div>
+                <p class="text-muted mt-3 small">
+                    <strong id="qrEvento"></strong><br>
+                    <i class="bi bi-info-circle me-1"></i>
+                    Presenta este código QR el día del evento para registrar tu asistencia.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row align-items-center mb-4">
+    <div class="col-md-6">
+        <h2 class="fw-bold text-dark">Mis Inscripciones</h2>
+    </div>
+
+    <div class="d-flex justify-content-end align-items-center gap-2">
+        <div th:if="${usuario == null or usuario.rol.name() == 'NO_AUTENTICADO'}">
+            <a href="/login" class="btn btn-primary text-white fw-bold">Iniciar Sesión</a>
+        </div>
+
+        <div th:if="${usuario != null && usuario.rol.name() != 'NO_AUTENTICADO'}" class="d-flex align-items-center gap-2">
+            <span class="text-muted small" th:text="${'Hola, ' + usuario.usuario}"></span>
+            <a href="/logout" class="btn btn-outline-danger fw-bold">Cerrar Sesión</a>
+        </div>
+    </div>
+</div>
+
+<div class="mb-4">
+    <a href="/eventos" class="btn btn-secondary">← Volver a Eventos</a>
+</div>
+
+<!-- Tabla de inscripciones -->
+<div th:if="${inscripciones != null && inscripciones.size() > 0}">
+    <table class="table table-hover shadow-sm">
+        <thead class="table-dark">
+        <tr>
+            <th class="py-3 ps-4">Evento</th>
+            <th class="py-3">Fecha del Evento</th>
+            <th class="py-3">Lugar</th>
+            <th class="py-3">Fecha de Inscripción</th>
+            <th class="py-3 text-center">Asistencia</th>
+            <th class="py-3 text-center">Acciones</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="inscripcion : ${inscripciones}">
+            <td class="fw-bold ps-4" th:text="${inscripcion.evento.titulo}"></td>
+            <td th:text="${#temporals.format(inscripcion.evento.fechaHora, 'dd/MM/yyyy HH:mm')}"></td>
+            <td th:text="${inscripcion.evento.lugar}"></td>
+            <td th:text="${#temporals.format(inscripcion.fechaInscripcion, 'dd/MM/yyyy HH:mm')}"></td>
+            <td class="text-center">
+                <span th:if="${inscripcion.asistio}" class="badge bg-success">
+                    <i class="bi bi-check-circle me-1"></i> Asistió
+                </span>
+                <span th:if="${!inscripcion.asistio}" class="badge bg-warning">
+                    <i class="bi bi-clock me-1"></i> Pendiente
+                </span>
+            </td>
+            <td class="text-center">
+                <div class="d-flex gap-2 justify-content-center">
+                    <button type="button" class="btn btn-sm btn-outline-success fw-bold btnVerQR"
+                            th:data-inscripcion-id="${inscripcion.id}"
+                            th:data-evento="${inscripcion.evento.titulo}"
+                            data-bs-toggle="modal" data-bs-target="#qrModal">
+                        <i class="bi bi-qr-code me-1"></i> QR
+                    </button>
+                    <a th:href="'/evento/ver/' + ${inscripcion.evento.id}" class="btn btn-sm btn-outline-info fw-bold">Ver Evento</a>
+                    <form th:action="'/inscripcion/desinscribirse/' + ${inscripcion.evento.id}" method="get" style="display:inline;">
+                        <button type="submit" class="btn btn-sm btn-outline-danger fw-bold"
+                                onclick="return confirm('¿Deseas cancelar tu inscripción en este evento?')">Cancelar</button>
+                    </form>
+                </div>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Mensaje cuando no hay inscripciones -->
+<div th:if="${inscripciones == null || inscripciones.size() == 0}" class="card text-center mt-4">
+    <div class="card-body py-5">
+        <h4 class="text-muted">No tienes inscripciones</h4>
+        <p class="text-muted mb-3">Aún no estás inscrito en ningún evento.</p>
+        <a href="/eventos" class="btn btn-primary">Explorar Eventos</a>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+    // Cuando se hace clic en un botón de QR
+    document.querySelectorAll('.btnVerQR').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const inscripcionId = this.getAttribute('data-inscripcion-id');
+            const evento = this.getAttribute('data-evento');
+
+            document.getElementById('qrEvento').textContent = evento;
+            document.getElementById('qrCode').innerHTML = '';
+
+            // Obtener datos del QR
+            fetch('/api/qr/obtener/' + inscripcionId)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Generar QR
+                        new QRCode(document.getElementById('qrCode'), {
+                            text: data.data,
+                            width: 250,
+                            height: 250,
+                            colorDark: '#000000',
+                            colorLight: '#ffffff',
+                            correctLevel: QRCode.CorrectLevel.H
+                        });
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        });
+    });
+</script>
+
+</body>
+</html>
+
