@@ -30,9 +30,6 @@
       <a href="/mis-inscripciones" class="btn btn-secondary text-white fw-bold d-inline-flex align-items-center gap-2">
         <span>Mis Eventos</span>
       </a>
-      <a th:if="${usuario != null && usuario.rol.name() == 'ADMIN'}" href="/admin/escanear-qr" class="btn btn-success text-white fw-bold">
-        <i class="bi bi-qr-code-scan me-1"></i> Escanear QR
-      </a>
       <a th:if="${usuario != null && usuario.rol.name() == 'ADMIN'}" href="/admin/estadisticas" class="btn btn-secondary text-white fw-bold">Estadísticas</a>
     </div>
 

@@ -54,11 +54,23 @@ public class ControladorSesion {
         }
     }
 
+    public static void organizadorValido(Context ctx) {
+        Usuario usuario = ctx.sessionAttribute(Main.KeySession.USUARIO.name());
+        if (usuario == null || usuario.getRol() == RolesUsuario.PARTICIPANTE) {
+            ctx.redirect("/");
+        }
+    }
+
     public static void vistaLogin(Context ctx) {
         Map<String, Object> model = new HashMap<>();
-        if (ctx.queryParam("error") != null) {
-            model.put("error", "Credenciales inválidas.");
+        String error = ctx.queryParam("error");
+
+        if ("1".equals(error)) {
+            model.put("error", "Usuario o contraseña incorrectos.");
+        } else if ("2".equals(error)) {
+            model.put("error", "Tu cuenta está bloqueada. Contacta al administrador.");
         }
+
         ctx.render("templates/login.html", model);
     }
 
@@ -69,27 +81,33 @@ public class ControladorSesion {
 
         Usuario usuario = servicioUsuario.validarLogin(nombre, password);
 
-        if (usuario != null) {
-            ctx.sessionAttribute(Main.KeySession.USUARIO.name(), usuario);
-
-            if (recordar) {
-                BasicTextEncryptor textEncryptor = new BasicTextEncryptor();
-                textEncryptor.setPassword(CLAVE_ENCRIPCION);
-                String valorEncriptado = textEncryptor.encrypt(usuario.getUsuario());
-
-                Cookie cookie = new Cookie(COOKIE_USER, valorEncriptado);
-                cookie.setMaxAge(604800); // 1 semana
-                cookie.setHttpOnly(true);
-                ctx.cookie(cookie);
-            }
-
-
-            ServicioLog.registrarAcceso(usuario.getUsuario());
-            String path = ctx.sessionAttribute(Main.KeySession.REFERER.name());
-            ctx.redirect((path != null) ? path : "/");
-        } else {
+        if (usuario == null) {
             ctx.redirect("/login?error=1");
+            return;
         }
+
+        if (usuario.isBloqueado()) {
+            ctx.redirect("/login?error=2");
+            return;
+        }
+
+        ctx.sessionAttribute(Main.KeySession.USUARIO.name(), usuario);
+
+        if (recordar) {
+            BasicTextEncryptor textEncryptor = new BasicTextEncryptor();
+            textEncryptor.setPassword(CLAVE_ENCRIPCION);
+            String valorEncriptado = textEncryptor.encrypt(usuario.getUsuario());
+
+            Cookie cookie = new Cookie(COOKIE_USER, valorEncriptado);
+            cookie.setPath("/");
+            cookie.setMaxAge(604800);
+            cookie.setHttpOnly(true);
+            ctx.cookie(cookie);
+        }
+
+        ServicioLog.registrarAcceso(usuario.getUsuario());
+        String path = ctx.sessionAttribute(Main.KeySession.REFERER.name());
+        ctx.redirect((path != null) ? path : "/");
     }
 
     public static void logout(Context ctx) {
@@ -98,7 +116,7 @@ public class ControladorSesion {
         ctx.redirect("/");
     }
 
-    public static void defaultPath(Context ctx) { ctx.redirect("/eventos"); }
+    public static void defaultPath(Context ctx) { ctx.redirect("/evento/lista"); }
 
     public static void volver(Context ctx) {
         String path = ctx.sessionAttribute(Main.KeySession.REFERER.name());

@@ -38,6 +38,31 @@ public class ServicioUsuario {
         }
     }
 
+    public boolean bloquear(int id) {
+        EntityManager em = BootStrapServices.getEntityManager();
+
+        try {
+            em.getTransaction().begin();
+
+            Usuario usuario = em.find(Usuario.class, id);
+
+            if (usuario != null) {
+                usuario.setBloqueado(!usuario.isBloqueado());
+                em.merge(usuario);
+                em.getTransaction().commit();
+                return true;
+            }
+
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+            e.printStackTrace();
+        } finally {
+            em.close();
+        }
+
+        return false;
+    }
+
     public Usuario buscarPorUsername(String username) {
         EntityManager em = BootStrapServices.getEntityManager();
         try {

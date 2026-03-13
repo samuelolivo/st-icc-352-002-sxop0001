@@ -1,0 +1,31 @@
+<div th:fragment="menu" class="d-flex justify-content-end align-items-center gap-2">
+
+  <div class="d-flex justify-content-end align-items-center gap-2">
+    <a href="/usuario/lista" class="btn btn-secondary position-relative text-white fw-bold">
+      Usuarios </a>
+    <a href="/evento/lista" class="btn btn-secondary text-white fw-bold d-inline-flex align-items-center gap-2">
+      <span>Eventos</span>
+    </a>
+    <a th:if="${usuario != null && usuario.rol.name() == 'ADMIN'}" href="/admin/estadisticas" class="btn btn-secondary text-white fw-bold">Estadísticas</a>
+  </div>
+
+  <div th:if="${usuario == null or usuario.rol.name() == 'NO_AUTENTICADO'}">
+    <a href="/login" class="btn btn-primary text-white fw-bold">
+      Iniciar Sesión
+    </a>
+  </div>
+
+  <div th:if="${usuario != null && usuario.rol.name() != 'NO_AUTENTICADO'}"
+       class="d-flex align-items-center gap-2">
+
+        <span class="text-muted small"
+              th:text="${'Hola, ' + usuario.usuario}">
+        </span>
+
+    <a href="/logout" class="btn btn-outline-danger fw-bold">
+      Cerrar Sesión
+    </a>
+
+  </div>
+
+</div>
