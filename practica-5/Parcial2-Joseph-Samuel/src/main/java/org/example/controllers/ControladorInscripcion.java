@@ -44,6 +44,11 @@ public class ControladorInscripcion {
             return;
         }
 
+        LocalDateTime ahora = LocalDateTime.now();
+        if (evento.getFechaHora() != null && !ahora.isBefore(evento.getFechaHora())) {
+            ctx.redirect("/evento/ver/" + eventoId + "?error=4");
+            return;
+        }
 
         if (!evento.tieneCupo()) {
             ctx.redirect("/evento/ver/" + eventoId + "?error=2");
@@ -64,26 +69,39 @@ public class ControladorInscripcion {
         Usuario usuarioLogueado = ctx.sessionAttribute(Main.KeySession.USUARIO.name());
         Long eventoId = ctx.pathParamAsClass("id", Long.class).get();
 
-
         if (usuarioLogueado == null || usuarioLogueado.getRol() == RolesUsuario.NO_AUTENTICADO) {
             ctx.redirect("/login");
             return;
         }
 
         Inscripcion inscripcion = ServicioInscripcion.getInstancia().findByEventoAndUsuario(eventoId, usuarioLogueado.getId());
-        LocalDate fechaEvento = inscripcion.getEvento().getFechaHora().toLocalDate();
-        LocalDate hoy = LocalDate.now();
 
-        if (inscripcion != null && hoy.isBefore(fechaEvento)) {
-            try {
-                ServicioInscripcion.getInstancia().eliminar(inscripcion.getId());
-                ctx.redirect("/evento/ver/" + eventoId + "?success=2");
-            } catch (Exception e) {
-                e.printStackTrace();
-                ctx.redirect("/evento/ver/" + eventoId + "?error=3");
-            }
-        } else {
+        if (inscripcion == null) {
             ctx.redirect("/evento/ver/" + eventoId);
+            return;
+        }
+
+        // VALIDACIÓN 1: No permitir desinscribirse si ya asistió
+        if (inscripcion.isAsistio()) {
+            ctx.redirect("/evento/ver/" + eventoId + "?error=5");
+            return;
+        }
+
+        // VALIDACIÓN 2: No permitir desinscribirse si el evento ya terminó
+        LocalDateTime fechaHoraEvento = inscripcion.getEvento().getFechaHora();
+        LocalDateTime ahora = LocalDateTime.now();
+
+        if (fechaHoraEvento != null && !ahora.isBefore(fechaHoraEvento)) {
+            ctx.redirect("/evento/ver/" + eventoId + "?error=6");
+            return;
+        }
+
+        try {
+            ServicioInscripcion.getInstancia().eliminar(inscripcion.getId());
+            ctx.redirect("/evento/ver/" + eventoId + "?success=2");
+        } catch (Exception e) {
+            e.printStackTrace();
+            ctx.redirect("/evento/ver/" + eventoId + "?error=3");
         }
     }
 
@@ -294,6 +312,32 @@ public class ControladorInscripcion {
             e.printStackTrace();
             ctx.status(500);
             ctx.json(Map.of("success", false));
+        }
+    }
+
+    public static void obtenerInscripcionUsuario(Context ctx) {
+        try {
+            Usuario usuarioLogueado = ctx.sessionAttribute(Main.KeySession.USUARIO.name());
+            Long eventoId = ctx.pathParamAsClass("eventoId", Long.class).get();
+
+            if (usuarioLogueado == null || usuarioLogueado.getRol() == RolesUsuario.NO_AUTENTICADO) {
+                ctx.status(401);
+                ctx.json(Map.of("success", false, "mensaje", "Usuario no autenticado"));
+                return;
+            }
+
+            Inscripcion inscripcion = ServicioInscripcion.getInstancia().findByEventoAndUsuario(eventoId, usuarioLogueado.getId());
+
+            if (inscripcion != null) {
+                ctx.json(Map.of("success", true, "inscripcionId", inscripcion.getId()));
+            } else {
+                ctx.status(404);
+                ctx.json(Map.of("success", false, "mensaje", "Inscripción no encontrada"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            ctx.status(500);
+            ctx.json(Map.of("success", false, "mensaje", "Error al obtener inscripción"));
         }
     }
 }

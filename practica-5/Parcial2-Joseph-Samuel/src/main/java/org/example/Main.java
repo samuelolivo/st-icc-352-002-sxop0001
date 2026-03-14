@@ -70,6 +70,7 @@ public class Main {
             config.routes.get("/organizador/escanear-qr", ControladorInscripcion::vistaEscanearQR);
             config.routes.post("/api/qr/validar", ControladorInscripcion::validarQR);
             config.routes.get("/api/qr/obtener/{id}", ControladorInscripcion::obtenerQR);
+            config.routes.get("/api/inscripcion/obtener/{eventoId}", ControladorInscripcion::obtenerInscripcionUsuario);
 
             config.fileRenderer(new JavalinThymeleaf());
         });

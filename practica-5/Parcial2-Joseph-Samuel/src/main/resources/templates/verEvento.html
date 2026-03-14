@@ -50,6 +50,9 @@
             <span th:if="${#strings.equals(param.error[0], '1')}">Ya estás inscrito en este evento</span>
             <span th:if="${#strings.equals(param.error[0], '2')}">Este evento está lleno</span>
             <span th:if="${#strings.equals(param.error[0], '3')}">Error al procesar la solicitud</span>
+            <span th:if="${#strings.equals(param.error[0], '4')}">No puedes inscribirte porque el evento ya comenzó o ya finalizó</span>
+            <span th:if="${#strings.equals(param.error[0], '5')}">No puedes cancelar la inscripción porque tu asistencia ya fue registrada</span>
+            <span th:if="${#strings.equals(param.error[0], '6')}">No puedes cancelar la inscripción porque el evento ya finalizó</span>
 
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
@@ -145,7 +148,7 @@
                         </div>
                         <div class="row g-2">
                             <div class="col-md-6">
-                                <button type="button" class="btn btn-success btn-lg w-100 fw-bold" data-bs-toggle="modal" data-bs-target="#qrModal" th:if="${param.inscripcionId != null}">
+                                <button type="button" class="btn btn-success btn-lg w-100 fw-bold" data-bs-toggle="modal" data-bs-target="#qrModal">
                                     <i class="bi bi-qr-code me-2"></i> Ver Código QR
                                 </button>
                             </div>
@@ -260,65 +263,139 @@
 <script>
     let qrActual = null;
 
-    document.getElementById('qrModal').addEventListener('show.bs.modal', function () {
-        const inscripcionId = new URLSearchParams(window.location.search).get('inscripcionId');
+    document.addEventListener('DOMContentLoaded', function() {
+        const qrModalElement = document.getElementById('qrModal');
 
-        if (inscripcionId) {
-            console.log('Obteniendo QR para inscripción:', inscripcionId);
+        if (!qrModalElement) {
+            console.error('Modal qrModal no encontrado en el DOM');
+            return;
+        }
 
-            fetch('/api/qr/obtener/' + inscripcionId)
+        qrModalElement.addEventListener('show.bs.modal', function () {
+            console.log('Modal abierto - Iniciando obtención del QR');
+            obtenerYMostrarQRDelEvento();
+        });
+    });
+
+    function obtenerYMostrarQRDelEvento() {
+
+        const urlPath = window.location.pathname;
+        const eventoIdMatch = urlPath.match(/\/evento\/ver\/(\d+)/);
+
+        if (!eventoIdMatch || !eventoIdMatch[1]) {
+            console.error('No se pudo extraer el ID del evento de la URL:', urlPath);
+            mostrarError('No se pudo identificar el evento');
+            return;
+        }
+
+        const eventoId = eventoIdMatch[1];
+        console.log('ID del evento extraído:', eventoId);
+
+        const inscripcionIdURL = new URLSearchParams(window.location.search).get('inscripcionId');
+
+        if (inscripcionIdURL) {
+            console.log('Usando inscripcionId de URL:', inscripcionIdURL);
+            obtenerYMostrarQR(inscripcionIdURL);
+        } else {
+            console.log('InscripcionId no en URL, obteniendo del servidor...');
+            fetch('/api/inscripcion/obtener/' + eventoId)
                 .then(response => {
-                    console.log('Status:', response.status);
+                    console.log('Respuesta del servidor:', response.status);
+                    if (!response.ok) {
+                        throw new Error('Error al obtener inscripción: ' + response.status);
+                    }
                     return response.json();
                 })
                 .then(data => {
-                    console.log('Datos recibidos:', data);
-
-                    if (data.success && data.data) {
-
-                        const qrContainer = document.getElementById('qrCode');
-                        qrContainer.innerHTML = '';
-
-                        console.log('Generando QR con datos:', data.data);
-
-                        try {
-                            qrActual = new QRCode(qrContainer, {
-                                text: data.data,
-                                width: 250,
-                                height: 250,
-                                colorDark: '#000000',
-                                colorLight: '#ffffff',
-                                correctLevel: QRCode.CorrectLevel.H
-                            });
-                            console.log('QR generado exitosamente');
-                        } catch (err) {
-                            console.error('Error generando QR:', err);
-                            qrContainer.innerHTML = '<div class="alert alert-danger">Error al generar QR</div>';
-                        }
+                    console.log('Datos recibidos del servidor:', data);
+                    if (data.success && data.inscripcionId) {
+                        console.log('Inscripción encontrada, ID:', data.inscripcionId);
+                        obtenerYMostrarQR(data.inscripcionId);
                     } else {
-                        console.error('Respuesta inválida:', data);
-                        document.getElementById('qrCode').innerHTML = '<div class="alert alert-danger">No se pudo obtener el QR</div>';
+                        mostrarError('No se encontró tu inscripción en el servidor');
                     }
                 })
                 .catch(error => {
-                    console.error('Error en fetch:', error);
-                    document.getElementById('qrCode').innerHTML = '<div class="alert alert-danger">Error al obtener el QR</div>';
+                    console.error('Error al obtener inscripción:', error);
+                    mostrarError('Error al obtener tu inscripción: ' + error.message);
                 });
-        } else {
-            console.warn('No se encontró inscripcionId en URL');
         }
-    });
+    }
+
+    function obtenerYMostrarQR(inscripcionId) {
+        console.log('Solicitando QR para inscripción:', inscripcionId);
+
+        fetch('/api/qr/obtener/' + inscripcionId)
+            .then(response => {
+                console.log('Respuesta QR - Status:', response.status);
+                if (!response.ok) {
+                    throw new Error('Error al obtener QR: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Datos QR recibidos:', data);
+
+                if (data.success && data.data) {
+                    console.log('QR data válido, generando código...');
+                    generarQR(data.data);
+                } else {
+                    mostrarError('No se pudo obtener el código QR del servidor');
+                }
+            })
+            .catch(error => {
+                console.error('Error al obtener QR del servidor:', error);
+                mostrarError('Error al obtener el QR: ' + error.message);
+            });
+    }
+
+    function generarQR(qrDataString) {
+        const qrContainer = document.getElementById('qrCode');
+
+        if (!qrContainer) {
+            console.error('Contenedor qrCode no encontrado');
+            return;
+        }
+
+        qrContainer.innerHTML = '';
+
+        try {
+            console.log('Generando QR con datos:', qrDataString);
+
+            qrActual = new QRCode(qrContainer, {
+                text: qrDataString,
+                width: 250,
+                height: 250,
+                colorDark: '#000000',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H
+            });
+
+            console.log('QR generado exitosamente');
+        } catch (err) {
+            console.error('Error generando QR con librería QRCode:', err);
+            mostrarError('Error al generar el código QR');
+        }
+    }
+
+    function mostrarError(mensaje) {
+        const qrContainer = document.getElementById('qrCode');
+        if (qrContainer) {
+            qrContainer.innerHTML = '<div class="alert alert-danger" role="alert">' +
+                '<i class="bi bi-exclamation-circle me-2"></i>' + mensaje + '</div>';
+        }
+    }
 
     document.addEventListener('DOMContentLoaded', function () {
         if (new URLSearchParams(window.location.search).get('success') === '1') {
-            console.log('Inscripcion exitosa, abriendo modal');
+            console.log('Inscripción exitosa detectada - abriendo modal automáticamente');
             setTimeout(() => {
                 const modalElement = document.getElementById('qrModal');
                 if (modalElement) {
                     const modal = new bootstrap.Modal(modalElement);
                     modal.show();
                 } else {
-                    console.error('No se encontró modal con ID qrModal');
+                    console.error('Modal qrModal no encontrado para auto-abrir');
                 }
             }, 500);
         }
