@@ -9,12 +9,37 @@ import java.util.List;
 
 public class ServicioUsuario {
 
+    private static ServicioUsuario instancia;
+
+    public static ServicioUsuario getInstancia() {
+        if (instancia == null) {
+            instancia = new ServicioUsuario();
+        }
+        return instancia;
+    }
+
     public ServicioUsuario() {
 
     }
 
+
     public Usuario crear(String username, String password, RolesUsuario rol) {
         Usuario usuario = new Usuario(username, password, rol);
+        EntityManager em = BootStrapServices.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            em.persist(usuario);
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+            e.printStackTrace();
+        } finally {
+            em.close();
+        }
+        return usuario;
+    }
+
+    public Usuario crearRegistro(Usuario usuario) {
         EntityManager em = BootStrapServices.getEntityManager();
         try {
             em.getTransaction().begin();
@@ -76,6 +101,10 @@ public class ServicioUsuario {
         }
     }
 
+    public Usuario findByUsername(String username) {
+        return buscarPorUsername(username);
+    }
+
     public Usuario validarLogin(String username, String password) {
         Usuario usuario = buscarPorUsername(username);
         if (usuario != null &&
@@ -130,7 +159,7 @@ public class ServicioUsuario {
         EntityManager em = BootStrapServices.getEntityManager();
         try {
             em.getTransaction().begin();
-            Usuario usuario = buscarPorUsername(username); // Reutilizamos búsqueda
+            Usuario usuario = buscarPorUsername(username);
             if (usuario != null) {
                 Usuario userDb = em.find(Usuario.class, usuario.getId());
                 userDb.setEstado(EstadoObjeto.INACTIVO);

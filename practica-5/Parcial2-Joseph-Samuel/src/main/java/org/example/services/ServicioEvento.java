@@ -6,6 +6,8 @@ import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 import java.util.List;
 
+import static org.example.services.BootStrapServices.getEntityManager;
+
 public class ServicioEvento {
     private static ServicioEvento instancia;
     private EntityManagerFactory emf = Persistence.createEntityManagerFactory("PersistenciaEventos");
@@ -23,14 +25,19 @@ public class ServicioEvento {
     }
 
     public Evento findById(Long id) {
-        try (EntityManager em = emf.createEntityManager()) {
+        EntityManager em = getEntityManager();
+        try {
             return em.createQuery(
-                            "SELECT e FROM Evento e LEFT JOIN FETCH e.organizador LEFT JOIN FETCH e.inscripciones WHERE e.id = :id",
-                            Evento.class)
+                            "SELECT e FROM Evento e " +
+                                    "LEFT JOIN FETCH e.inscripciones i " +
+                                    "LEFT JOIN FETCH i.usuario " +
+                                    "WHERE e.id = :id", Evento.class)
                     .setParameter("id", id)
                     .getSingleResult();
         } catch (Exception e) {
-            return null;
+            return em.find(Evento.class, id);
+        } finally {
+            em.close();
         }
     }
 

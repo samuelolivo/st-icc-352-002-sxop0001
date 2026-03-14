@@ -24,12 +24,13 @@ public class ControladorInscripcion {
         Usuario usuarioLogueado = ctx.sessionAttribute(Main.KeySession.USUARIO.name());
         Long eventoId = ctx.pathParamAsClass("id", Long.class).get();
 
-
         if (usuarioLogueado == null || usuarioLogueado.getRol() == RolesUsuario.NO_AUTENTICADO) {
             ctx.sessionAttribute(Main.KeySession.REFERER.name(), "/evento/ver/" + eventoId);
             ctx.redirect("/login");
             return;
         }
+
+
 
         Evento evento = ServicioEvento.getInstancia().findById(eventoId);
 
@@ -107,13 +108,33 @@ public class ControladorInscripcion {
     public static void vistaEscanearQR(Context ctx) {
         Usuario usuarioLogueado = ctx.sessionAttribute(Main.KeySession.USUARIO.name());
 
-        if (usuarioLogueado == null || usuarioLogueado.getRol() != RolesUsuario.ADMIN) {
+        if (usuarioLogueado == null || usuarioLogueado.getRol() == RolesUsuario.NO_AUTENTICADO) {
             ctx.redirect("/evento/lista");
             return;
         }
 
+
+        if (usuarioLogueado.getRol() != RolesUsuario.ADMIN && usuarioLogueado.getRol() != RolesUsuario.ORGANIZADOR) {
+            ctx.redirect("/evento/lista");
+            return;
+        }
+
+        Long eventoId = ctx.queryParamAsClass("evento", Long.class).getOrNull();
+
         Map<String, Object> model = new HashMap<>();
         model.put("usuario", usuarioLogueado);
+        if (eventoId != null) {
+            Evento evento = ServicioEvento.getInstancia().findById(eventoId);
+            if (evento != null) {
+                if (usuarioLogueado.getRol() == RolesUsuario.ORGANIZADOR) {
+                    if (evento.getOrganizador() == null || evento.getOrganizador().getId() != usuarioLogueado.getId()) {
+                        ctx.redirect("/evento/lista");
+                        return;
+                    }
+                }
+                model.put("evento", evento);
+            }
+        }
 
         ctx.render("templates/admin/escanearQR.html", model);
     }
@@ -122,7 +143,13 @@ public class ControladorInscripcion {
         try {
             Usuario usuarioLogueado = ctx.sessionAttribute(Main.KeySession.USUARIO.name());
 
-            if (usuarioLogueado == null || usuarioLogueado.getRol() != RolesUsuario.ADMIN) {
+            if (usuarioLogueado == null || usuarioLogueado.getRol() == RolesUsuario.NO_AUTENTICADO) {
+                ctx.status(403);
+                ctx.json(Map.of("success", false, "mensaje", "No tienes permisos"));
+                return;
+            }
+
+            if (usuarioLogueado.getRol() != RolesUsuario.ADMIN && usuarioLogueado.getRol() != RolesUsuario.ORGANIZADOR) {
                 ctx.status(403);
                 ctx.json(Map.of("success", false, "mensaje", "No tienes permisos"));
                 return;
@@ -140,41 +167,62 @@ public class ControladorInscripcion {
             Map<String, Object> datosQR = objectMapper.readValue(qrData, Map.class);
 
 
-            long eventoId;
+            Long eventoId;
             Object eventIdObj = datosQR.get("eventId");
-            switch (eventIdObj) {
-                case Integer i -> eventoId = i.longValue();
-                case Long l -> eventoId = l;
-                case Double v -> eventoId = v.longValue();
-                case String s -> eventoId = Long.parseLong(s);
-                case null, default -> {
-                    ctx.status(400);
-                    ctx.json(Map.of("success", false, "mensaje", "Formato de eventId inválido"));
-                    return;
-                }
+            if (eventIdObj instanceof Integer) {
+                eventoId = ((Integer) eventIdObj).longValue();
+            } else if (eventIdObj instanceof Long) {
+                eventoId = (Long) eventIdObj;
+            } else if (eventIdObj instanceof Double) {
+                eventoId = ((Double) eventIdObj).longValue();
+            } else if (eventIdObj instanceof String) {
+                eventoId = Long.parseLong((String) eventIdObj);
+            } else {
+                ctx.status(400);
+                ctx.json(Map.of("success", false, "mensaje", "Formato de eventId inválido"));
+                return;
             }
 
 
-            int usuarioId;
+            Integer usuarioId;
             Object userIdObj = datosQR.get("userId");
-            switch (userIdObj) {
-                case Integer i -> usuarioId = i;
-                case Long l -> usuarioId = l.intValue();
-                case Double v -> usuarioId = v.intValue();
-                case String s -> usuarioId = Integer.parseInt(s);
-                case null, default -> {
-                    ctx.status(400);
-                    ctx.json(Map.of("success", false, "mensaje", "Formato de userId inválido"));
-                    return;
-                }
+            if (userIdObj instanceof Integer) {
+                usuarioId = (Integer) userIdObj;
+            } else if (userIdObj instanceof Long) {
+                usuarioId = ((Long) userIdObj).intValue();
+            } else if (userIdObj instanceof Double) {
+                usuarioId = ((Double) userIdObj).intValue();
+            } else if (userIdObj instanceof String) {
+                usuarioId = Integer.parseInt((String) userIdObj);
+            } else {
+                ctx.status(400);
+                ctx.json(Map.of("success", false, "mensaje", "Formato de userId inválido"));
+                return;
             }
-
 
             String token = (String) datosQR.get("token");
             if (token == null || token.isEmpty()) {
                 ctx.status(400);
                 ctx.json(Map.of("success", false, "mensaje", "Token inválido"));
                 return;
+            }
+
+
+            Long eventoActualId = ctx.queryParamAsClass("evento", Long.class).getOrNull();
+            if (eventoActualId != null && !eventoActualId.equals(eventoId)) {
+                ctx.status(400);
+                ctx.json(Map.of("success", false, "mensaje", "Este QR no pertenece a este evento"));
+                return;
+            }
+
+
+            if (usuarioLogueado.getRol() == RolesUsuario.ORGANIZADOR) {
+                Evento evento = ServicioEvento.getInstancia().findById(eventoId);
+                if (evento == null || evento.getOrganizador() == null || evento.getOrganizador().getId() != usuarioLogueado.getId()) {
+                    ctx.status(403);
+                    ctx.json(Map.of("success", false, "mensaje", "No tienes permisos para escanear en este evento"));
+                    return;
+                }
             }
 
             Inscripcion inscripcion = ServicioInscripcion.getInstancia().findByEventoAndUsuario(eventoId, usuarioId);
@@ -193,16 +241,7 @@ public class ControladorInscripcion {
 
             if (inscripcion.isAsistio()) {
                 ctx.status(409);
-                ctx.json(Map.of("success", false, "mensaje", "Asistencia ha sido registrada previamente"));
-                return;
-            }
-
-            LocalDate fechaEvento = inscripcion.getEvento().getFechaHora().toLocalDate();
-            LocalDate hoy = LocalDate.now();
-
-            if (!fechaEvento.equals(hoy)) {
-                ctx.status(409);
-                ctx.json(Map.of("success", false, "mensaje", "Solo se puede registrar asistencia el día del evento"));
+                ctx.json(Map.of("success", false, "mensaje", "Asistencia ya registrada"));
                 return;
             }
 

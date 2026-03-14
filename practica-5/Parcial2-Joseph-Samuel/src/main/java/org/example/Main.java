@@ -39,6 +39,9 @@ public class Main {
             config.routes.post("/procesarLogin", ControladorSesion::procesarLogin);
             config.routes.get("/logout", ControladorSesion::logout);
 
+            config.routes.get("/registro", ControladorRegistro::vistaRegistro);
+            config.routes.post("/registrar", ControladorRegistro::registrar);
+
 
             config.routes.get("/usuario/lista", ControladorUsuario::vistaListar);
             config.routes.post("/admin/usuario/bloquear", ControladorUsuario::bloquear);
