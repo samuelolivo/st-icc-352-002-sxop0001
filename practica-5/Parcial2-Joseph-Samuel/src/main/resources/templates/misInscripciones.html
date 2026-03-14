@@ -93,11 +93,7 @@
                             data-bs-toggle="modal" data-bs-target="#qrModal">
                         <i class="bi bi-qr-code me-1"></i> QR
                     </button>
-                    <a th:href="'/evento/ver/' + ${inscripcion.evento.id}" class="btn btn-sm btn-outline-info fw-bold">Ver Evento</a>
-                    <form th:action="'/inscripcion/desinscribirse/' + ${inscripcion.evento.id}" method="get" style="display:inline;">
-                        <button type="submit" class="btn btn-sm btn-outline-danger fw-bold"
-                                onclick="return confirm('¿Deseas cancelar tu inscripción en este evento?')">Cancelar</button>
-                    </form>
+                    <a th:href="'/evento/ver/' + ${inscripcion.evento.id}" class="btn btn-sm btn-outline-info fw-bold">Ver Inscripcion</a>
                 </div>
             </td>
         </tr>

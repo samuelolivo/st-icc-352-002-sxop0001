@@ -20,6 +20,22 @@ public class ControladorEvento {
 
         Map<String, Object> model = new HashMap<>();
         model.put("eventos", eventos);
+        model.put("tituloVista", "Eventos");
+        model.put("usuario", usuarioLogueado);
+
+        ctx.sessionAttribute(Main.KeySession.REFERER.name(), "/evento/lista");
+        ctx.render("templates/eventos.html", model);
+    }
+
+    public static void miseventos(Context ctx) {
+        Usuario usuarioLogueado = ctx.sessionAttribute(Main.KeySession.USUARIO.name());
+        List<Evento> eventos = ServicioEvento.getInstancia().findAll();
+
+        Map<String, Object> model = new HashMap<>();
+        model.put("eventos", eventos.stream()
+                .filter(e -> e.getOrganizador() != null && e.getOrganizador().getId() == usuarioLogueado.getId())
+                .collect(Collectors.toList()));
+        model.put("tituloVista", "Mis Eventos Creados");
         model.put("usuario", usuarioLogueado);
 
         ctx.sessionAttribute(Main.KeySession.REFERER.name(), "/evento/lista");
@@ -114,6 +130,13 @@ public class ControladorEvento {
 
         List<Inscripcion> inscripciones = evento.getInscripciones();
 
+        long totalInscritos = inscripciones.size();
+        long totalAsistentes = inscripciones.stream().filter(Inscripcion::isAsistio).count();
+
+        double porcentajeAsistencia = 0;
+        if (totalInscritos > 0) {
+            porcentajeAsistencia = ((double) totalAsistentes / totalInscritos) * 100;
+        }
 
         Map<String, Long> inscripcionesPorDia = inscripciones.stream()
                 .filter(i -> i.getFechaInscripcion() != null)
@@ -123,9 +146,13 @@ public class ControladorEvento {
                         Collectors.counting()
                 ));
 
-        long totalInscritos  = inscripciones.size();
-        long totalAsistentes = inscripciones.stream().filter(Inscripcion::isAsistio).count();
-
+        Map<String, Long> asistenciaPorHora = inscripciones.stream()
+                .filter(i -> i.isAsistio() && i.getFechaAsistencia() != null)
+                .collect(Collectors.groupingBy(
+                        i -> String.valueOf(i.getFechaAsistencia().getHour()),
+                        LinkedHashMap::new,
+                        Collectors.counting()
+                ));
 
         Usuario usuarioLogueado = ctx.sessionAttribute(Main.KeySession.USUARIO.name());
         boolean estaInscrito = false;
@@ -138,8 +165,10 @@ public class ControladorEvento {
         model.put("evento", evento);
         model.put("totalInscritos", totalInscritos);
         model.put("totalAsistentes", totalAsistentes);
+        model.put("porcentajeAsistencia", Math.round(porcentajeAsistencia));
         model.put("estaInscrito", estaInscrito);
         model.put("inscripcionesPorDia", inscripcionesPorDia);
+        model.put("asistenciaPorHora", asistenciaPorHora);
         model.put("usuario", usuarioLogueado);
 
         ctx.render("templates/verEvento.html", model);

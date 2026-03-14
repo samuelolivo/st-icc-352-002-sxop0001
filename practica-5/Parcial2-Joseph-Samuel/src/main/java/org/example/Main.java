@@ -53,6 +53,7 @@ public class Main {
 
 
             config.routes.get("/evento/lista", ControladorEvento::listar);
+            config.routes.get("organizador/mis-eventos", ControladorEvento::miseventos);
             config.routes.get("/organizador/evento/crear", ControladorEvento::vistaCrear);
             config.routes.post("/organizador/evento/guardar", ControladorEvento::guardar);
             config.routes.get("/organizador/evento/editar/{id}", ControladorEvento::vistaModificar);

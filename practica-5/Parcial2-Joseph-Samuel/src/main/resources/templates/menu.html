@@ -6,7 +6,7 @@
     <a href="/evento/lista" class="btn btn-secondary text-white fw-bold d-inline-flex align-items-center gap-2">
       <span>Eventos</span>
     </a>
-    <a th:if="${usuario != null && (usuario.rol.name() == 'ADMIN' || usuario.rol.name() == 'ORGANIZADOR')}" href="/organizador/escanear-qr" class="btn btn-secondary text-white fw-bold">Escaner de entradas</a>
+    <a th:if="${usuario != null && (usuario.rol.name() == 'ADMIN' || usuario.rol.name() == 'ORGANIZADOR')}" href="/organizador/mis-eventos" class="btn btn-info text-white fw-bold">Mis Eventos</a>
     <div th:if="${usuario == null or usuario.rol.name() != 'NO_AUTENTICADO'}">
       <a href="/mis-inscripciones" class="btn btn-info text-white fw-bold d-inline-flex align-items-center gap-2">
         <span>Mis Inscripciones</span>
@@ -30,7 +30,5 @@
     <a href="/logout" class="btn btn-outline-danger fw-bold">
       Cerrar Sesión
     </a>
-
   </div>
-
 </div>
