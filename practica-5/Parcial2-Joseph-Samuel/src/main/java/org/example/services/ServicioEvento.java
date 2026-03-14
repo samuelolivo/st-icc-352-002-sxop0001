@@ -6,8 +6,6 @@ import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 import java.util.List;
 
-import static org.example.services.BootStrapServices.getEntityManager;
-
 public class ServicioEvento {
     private static ServicioEvento instancia;
     private EntityManagerFactory emf = Persistence.createEntityManagerFactory("PersistenciaEventos");
@@ -17,10 +15,17 @@ public class ServicioEvento {
         return instancia;
     }
 
+    private EntityManager getEntityManager() {
+        return emf.createEntityManager();
+    }
+
     public List<Evento> findAll() {
-        try (EntityManager em = emf.createEntityManager()) {
+        EntityManager em = getEntityManager();
+        try {
             return em.createQuery("SELECT DISTINCT e FROM Evento e LEFT JOIN FETCH e.organizador", Evento.class)
                     .getResultList();
+        } finally {
+            em.close();
         }
     }
 
@@ -28,48 +33,72 @@ public class ServicioEvento {
         EntityManager em = getEntityManager();
         try {
             return em.createQuery(
-                            "SELECT e FROM Evento e " +
+                            "SELECT DISTINCT e FROM Evento e " +
+                                    "LEFT JOIN FETCH e.organizador " +
                                     "LEFT JOIN FETCH e.inscripciones i " +
                                     "LEFT JOIN FETCH i.usuario " +
                                     "WHERE e.id = :id", Evento.class)
                     .setParameter("id", id)
                     .getSingleResult();
         } catch (Exception e) {
-            return em.find(Evento.class, id);
+            try {
+                Evento evento = em.find(Evento.class, id);
+                if (evento != null) {
+
+                    if (evento.getOrganizador() != null) {
+                        evento.getOrganizador().getId();
+                    }
+                    if (evento.getInscripciones() != null) {
+                        evento.getInscripciones().size();
+                    }
+                }
+                return evento;
+            } catch (Exception ex) {
+                return null;
+            }
         } finally {
             em.close();
         }
     }
 
     public void crear(Evento evento) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEntityManager();
         try {
             em.getTransaction().begin();
             em.persist(evento);
             em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            throw e;
         } finally {
             em.close();
         }
     }
 
     public void actualizar(Evento evento) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEntityManager();
         try {
             em.getTransaction().begin();
             em.merge(evento);
             em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            throw e;
         } finally {
             em.close();
         }
     }
 
     public void eliminar(Long id) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEntityManager();
         try {
             em.getTransaction().begin();
             Evento e = em.find(Evento.class, id);
             if (e != null) em.remove(e);
             em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            throw e;
         } finally {
             em.close();
         }

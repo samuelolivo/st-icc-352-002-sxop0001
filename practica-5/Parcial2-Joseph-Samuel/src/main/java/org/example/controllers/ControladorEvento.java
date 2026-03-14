@@ -105,62 +105,43 @@ public class ControladorEvento {
 
     public static void vistaVer(Context ctx) {
         Long id = ctx.pathParamAsClass("id", Long.class).get();
-
-
         Evento evento = ServicioEvento.getInstancia().findById(id);
 
-        if (evento != null) {
-
-            List<Inscripcion> inscripciones = evento.getInscripciones() != null
-                    ? evento.getInscripciones()
-                    : new ArrayList<>();
-
-            Map<String, Long> inscripcionesPorDia = inscripciones.stream()
-                    .filter(i -> i.getFechaInscripcion() != null)
-                    .collect(Collectors.groupingBy(
-                            i -> i.getFechaInscripcion().format(DateTimeFormatter.ofPattern("dd/MM")),
-                            LinkedHashMap::new,
-                            Collectors.counting()
-                    ));
-
-
-            Map<String, Long> asistenciaPorHora = inscripciones.stream()
-                    .filter(i -> i.isAsistio() && i.getFechaAsistencia() != null)
-                    .collect(Collectors.groupingBy(
-                            i -> String.format("%02d:00", i.getFechaAsistencia().getHour()),
-                            LinkedHashMap::new,
-                            Collectors.counting()
-                    ));
-
-
-            long totalInscritos  = inscripciones.size();
-            long totalAsistentes = inscripciones.stream().filter(Inscripcion::isAsistio).count();
-            double porcentaje    = totalInscritos > 0
-                    ? Math.round((totalAsistentes * 100.0 / totalInscritos) * 10.0) / 10.0
-                    : 0.0;
-
-
-            Usuario usuarioLogueado = ctx.sessionAttribute(Main.KeySession.USUARIO.name());
-            boolean estaInscrito = false;
-            if (usuarioLogueado != null) {
-                estaInscrito = inscripciones.stream()
-                        .anyMatch(ins -> ins.getUsuario().getId() == usuarioLogueado.getId());
-            }
-
-
-            Map<String, Object> model = new HashMap<>();
-            model.put("evento", evento);
-            model.put("totalInscritos", totalInscritos);
-            model.put("totalAsistentes", totalAsistentes);
-            model.put("porcentajeAsistencia", porcentaje);
-            model.put("inscripcionesPorDia", inscripcionesPorDia);
-            model.put("asistenciaPorHora", asistenciaPorHora);
-            model.put("estaInscrito", estaInscrito);
-            model.put("usuario", usuarioLogueado);
-
-            ctx.render("templates/verEvento.html", model);
-        } else {
+        if (evento == null) {
             ctx.redirect("/evento/lista");
+            return;
         }
+
+        List<Inscripcion> inscripciones = evento.getInscripciones();
+
+
+        Map<String, Long> inscripcionesPorDia = inscripciones.stream()
+                .filter(i -> i.getFechaInscripcion() != null)
+                .collect(Collectors.groupingBy(
+                        i -> i.getFechaInscripcion().format(DateTimeFormatter.ofPattern("dd/MM")),
+                        LinkedHashMap::new,
+                        Collectors.counting()
+                ));
+
+        long totalInscritos  = inscripciones.size();
+        long totalAsistentes = inscripciones.stream().filter(Inscripcion::isAsistio).count();
+
+
+        Usuario usuarioLogueado = ctx.sessionAttribute(Main.KeySession.USUARIO.name());
+        boolean estaInscrito = false;
+        if (usuarioLogueado != null) {
+            estaInscrito = inscripciones.stream()
+                    .anyMatch(ins -> ins.getUsuario().getId() == usuarioLogueado.getId());
+        }
+
+        Map<String, Object> model = new HashMap<>();
+        model.put("evento", evento);
+        model.put("totalInscritos", totalInscritos);
+        model.put("totalAsistentes", totalAsistentes);
+        model.put("estaInscrito", estaInscrito);
+        model.put("inscripcionesPorDia", inscripcionesPorDia);
+        model.put("usuario", usuarioLogueado);
+
+        ctx.render("templates/verEvento.html", model);
     }
 }
