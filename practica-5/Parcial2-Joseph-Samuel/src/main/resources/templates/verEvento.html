@@ -75,7 +75,7 @@
 
         <div class="mb-4">
             <a href="/evento/lista" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left"></i> Volver a la lista
+                <i class="bi bi-arrow-left"></i> Volver
             </a>
         </div>
 
@@ -122,72 +122,58 @@
 
         <div class="card border-0 bg-white p-4 shadow-sm">
 
-            <div th:if="${usuario == null}" class="text-center">
-                <p class="text-muted mb-3">Inicia sesión para poder reservar tu cupo</p>
-                <a href="/login" class="btn btn-primary btn-lg px-5">Iniciar Sesión</a>
+            <div th:if="${evento.fechaHora != null and evento.fechaHora.isBefore(#temporals.createNow())}"
+                 class="alert alert-secondary text-center py-3 mb-0">
+                <i class="bi bi-calendar-x me-2"></i>
+                <strong>Este evento ya finalizó.</strong> No es posible inscribirse.
             </div>
 
-            <div th:if="${usuario != null}">
+            <div th:if="${evento.fechaHora == null or !evento.fechaHora.isBefore(#temporals.createNow())}">
 
-                <div th:if="${estaInscrito}">
-                    <div class="alert alert-info border-0 bg-light-info text-center py-3">
-                        <i class="bi bi-info-circle-fill me-2"></i> Tienes una inscripción activa para este evento.
-                    </div>
-                    <div class="row g-2">
-                        <div class="col-md-6">
-                            <button type="button" class="btn btn-success btn-lg w-100 fw-bold" data-bs-toggle="modal" data-bs-target="#qrModal" th:if="${param.inscripcionId != null}">
-                                <i class="bi bi-qr-code me-2"></i> Ver Código QR
-                            </button>
+                <div th:if="${usuario == null}" class="text-center">
+                    <p class="text-muted mb-3">Inicia sesión para poder reservar tu cupo</p>
+                    <a href="/login" class="btn btn-primary btn-lg px-5">Iniciar Sesión</a>
+                </div>
+
+                <div th:if="${usuario != null}">
+
+                    <div th:if="${estaInscrito}">
+                        <div class="alert alert-info border-0 bg-light-info text-center py-3">
+                            <i class="bi bi-info-circle-fill me-2"></i> Tienes una inscripción activa para este evento.
                         </div>
-                        <div class="col-md-6">
-                            <form th:action="'/inscripcion/desinscribirse/' + ${evento.id}" method="get" style="display: block;">
-                                <button type="submit" class="btn btn-warning btn-lg w-100 fw-bold">
-                                    <i class="bi bi-x-circle me-2"></i> Cancelar Inscripción
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <button type="button" class="btn btn-success btn-lg w-100 fw-bold" data-bs-toggle="modal" data-bs-target="#qrModal" th:if="${param.inscripcionId != null}">
+                                    <i class="bi bi-qr-code me-2"></i> Ver Código QR
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <form th:action="'/inscripcion/desinscribirse/' + ${evento.id}" method="get" style="display: block;">
+                                    <button type="submit" class="btn btn-warning btn-lg w-100 fw-bold">
+                                        <i class="bi bi-x-circle me-2"></i> Cancelar Inscripción
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div th:if="${!estaInscrito}">
+                        <div th:if="${evento.tieneCupo()}">
+                            <form th:action="'/inscripcion/inscribirse/' + ${evento.id}" method="get">
+                                <button type="submit" class="btn btn-success btn-lg w-100 fw-bold">
+                                    <i class="bi bi-person-plus-fill me-2"></i> Inscribirme
                                 </button>
                             </form>
                         </div>
-                    </div>
-                </div>
-
-                <div th:if="${!estaInscrito}">
-                    <div th:if="${evento.tieneCupo()}">
-                        <form th:action="'/inscripcion/inscribirse/' + ${evento.id}" method="get">
-                            <button type="submit" class="btn btn-success btn-lg w-100 fw-bold">
-                                <i class="bi bi-person-plus-fill me-2"></i> Inscribirme
-                            </button>
-                        </form>
-                    </div>
-                    <div th:if="${!evento.tieneCupo()}" class="alert alert-danger text-center py-3 mb-0">
-                        <i class="bi bi-slash-circle me-2"></i> Lo sentimos, este evento ha alcanzado el límite de cupos.
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="mt-5 card">
-            <div class="card-header bg-dark text-white">
-                <h5 class="mb-0 h6"><i class="bi bi-people-fill me-2"></i> Personas Inscritas</h5>
-            </div>
-            <div class="card-body p-0">
-                <div th:if="${not #lists.isEmpty(evento.inscripciones)}">
-                    <div class="list-group list-group-flush">
-                        <div th:each="ins : ${evento.inscripciones}" class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                                <span class="fw-bold" th:text="${ins.usuario.usuario}"></span>
-                                <br>
-                                <small class="text-muted" th:text="${ins.fechaInscripcion != null ? #temporals.format(ins.fechaInscripcion, 'dd/MM/yyyy HH:mm') : 'N/A'}"></small>
-                            </div>
-                            <span th:if="${ins.asistio}" class="badge bg-success rounded-pill">Asistió</span>
-                            <span th:if="${!ins.asistio}" class="badge bg-light text-dark border rounded-pill">Pendiente</span>
+                        <div th:if="${!evento.tieneCupo()}" class="alert alert-danger text-center py-3 mb-0">
+                            <i class="bi bi-slash-circle me-2"></i> Lo sentimos, este evento ha alcanzado el límite de cupos.
                         </div>
                     </div>
                 </div>
-                <div th:if="${#lists.isEmpty(evento.inscripciones)}" class="text-center py-4 text-muted">
-                    <i class="bi bi-inbox h1 d-block mb-2 text-light"></i>
-                    Aún no hay participantes registrados.
-                </div>
+
             </div>
         </div>
+
         <div th:if="${not #lists.isEmpty(evento.inscripciones)}" class="mt-5 card border-0 shadow-sm">
             <div class="card-header bg-secondary text-white d-flex align-items-center gap-2">
                 <i class="bi bi-bar-chart-fill"></i>
@@ -229,6 +215,31 @@
                             <canvas id="chartAsistenciaHora"></canvas>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-5 card">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0 h6"><i class="bi bi-people-fill me-2"></i> Personas Inscritas</h5>
+            </div>
+            <div class="card-body p-0">
+                <div th:if="${not #lists.isEmpty(evento.inscripciones)}">
+                    <div class="list-group list-group-flush">
+                        <div th:each="ins : ${evento.inscripciones}" class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="fw-bold" th:text="${ins.usuario.usuario}"></span>
+                                <br>
+                                <small class="text-muted" th:text="${ins.fechaInscripcion != null ? #temporals.format(ins.fechaInscripcion, 'dd/MM/yyyy HH:mm') : 'N/A'}"></small>
+                            </div>
+                            <span th:if="${ins.asistio}" class="badge bg-success rounded-pill">Asistió</span>
+                            <span th:if="${!ins.asistio}" class="badge bg-light text-dark border rounded-pill">Pendiente</span>
+                        </div>
+                    </div>
+                </div>
+                <div th:if="${#lists.isEmpty(evento.inscripciones)}" class="text-center py-4 text-muted">
+                    <i class="bi bi-inbox h1 d-block mb-2 text-light"></i>
+                    Aún no hay participantes registrados.
                 </div>
             </div>
         </div>
