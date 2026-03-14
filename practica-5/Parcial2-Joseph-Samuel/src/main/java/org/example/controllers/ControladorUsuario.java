@@ -7,6 +7,7 @@ import org.example.models.Usuario;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import static org.example.Main.servicioUsuario;
 
@@ -25,7 +26,7 @@ public class ControladorUsuario {
     }
 
     public static void bloquear(Context ctx) {
-        int id = Integer.parseInt(ctx.formParam("id"));
+        int id = Integer.parseInt(Objects.requireNonNull(ctx.formParam("id")));
         servicioUsuario.bloquear(id);
         ctx.redirect("/usuario/lista");
     }
@@ -80,7 +81,7 @@ public class ControladorUsuario {
     }
 
     public static void modificar(Context ctx) {
-        int id = Integer.parseInt(ctx.formParam("id"));
+        int id = Integer.parseInt(Objects.requireNonNull(ctx.formParam("id")));
         String usuario = ctx.formParam("usuario");
         String password = ctx.formParam("password");
         String rolStr = ctx.formParam("rol");

@@ -6,7 +6,12 @@
     <a href="/evento/lista" class="btn btn-secondary text-white fw-bold d-inline-flex align-items-center gap-2">
       <span>Eventos</span>
     </a>
-    <a th:if="${usuario != null && usuario.rol.name() == 'ADMIN'}" href="/admin/estadisticas" class="btn btn-secondary text-white fw-bold">Estadísticas</a>
+    <a th:if="${usuario != null && (usuario.rol.name() == 'ADMIN' || usuario.rol.name() == 'ORGANIZADOR')}" href="/organizador/escanear-qr" class="btn btn-secondary text-white fw-bold">Escaner de entradas</a>
+    <div th:if="${usuario == null or usuario.rol.name() != 'NO_AUTENTICADO'}">
+      <a href="/mis-inscripciones" class="btn btn-info text-white fw-bold d-inline-flex align-items-center gap-2">
+        <span>Mis Inscripciones</span>
+      </a>
+    </div>
   </div>
 
   <div th:if="${usuario == null or usuario.rol.name() == 'NO_AUTENTICADO'}">

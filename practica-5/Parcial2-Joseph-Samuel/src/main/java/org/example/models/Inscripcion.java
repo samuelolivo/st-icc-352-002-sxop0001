@@ -18,7 +18,7 @@ public class Inscripcion {
     @JoinColumn(name = "evento_id", nullable = false)
     private Evento evento;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;
 

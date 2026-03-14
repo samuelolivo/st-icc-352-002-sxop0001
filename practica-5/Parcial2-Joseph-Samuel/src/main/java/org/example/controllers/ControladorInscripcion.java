@@ -10,6 +10,7 @@ import org.example.services.ServicioEvento;
 import org.example.services.ServicioInscripcion;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -32,9 +33,8 @@ public class ControladorInscripcion {
 
         Evento evento = ServicioEvento.getInstancia().findById(eventoId);
 
-
         if (evento == null) {
-            ctx.redirect("/eventos");
+            ctx.redirect("/evento/lista");
             return;
         }
 
@@ -70,8 +70,10 @@ public class ControladorInscripcion {
         }
 
         Inscripcion inscripcion = ServicioInscripcion.getInstancia().findByEventoAndUsuario(eventoId, usuarioLogueado.getId());
+        LocalDate fechaEvento = inscripcion.getEvento().getFechaHora().toLocalDate();
+        LocalDate hoy = LocalDate.now();
 
-        if (inscripcion != null) {
+        if (inscripcion != null && hoy.isBefore(fechaEvento)) {
             try {
                 ServicioInscripcion.getInstancia().eliminar(inscripcion.getId());
                 ctx.redirect("/evento/ver/" + eventoId + "?success=2");
@@ -106,7 +108,7 @@ public class ControladorInscripcion {
         Usuario usuarioLogueado = ctx.sessionAttribute(Main.KeySession.USUARIO.name());
 
         if (usuarioLogueado == null || usuarioLogueado.getRol() != RolesUsuario.ADMIN) {
-            ctx.redirect("/eventos");
+            ctx.redirect("/evento/lista");
             return;
         }
 
@@ -138,37 +140,33 @@ public class ControladorInscripcion {
             Map<String, Object> datosQR = objectMapper.readValue(qrData, Map.class);
 
 
-            Long eventoId;
+            long eventoId;
             Object eventIdObj = datosQR.get("eventId");
-            if (eventIdObj instanceof Integer) {
-                eventoId = ((Integer) eventIdObj).longValue();
-            } else if (eventIdObj instanceof Long) {
-                eventoId = (Long) eventIdObj;
-            } else if (eventIdObj instanceof Double) {
-                eventoId = ((Double) eventIdObj).longValue();
-            } else if (eventIdObj instanceof String) {
-                eventoId = Long.parseLong((String) eventIdObj);
-            } else {
-                ctx.status(400);
-                ctx.json(Map.of("success", false, "mensaje", "Formato de eventId inválido"));
-                return;
+            switch (eventIdObj) {
+                case Integer i -> eventoId = i.longValue();
+                case Long l -> eventoId = l;
+                case Double v -> eventoId = v.longValue();
+                case String s -> eventoId = Long.parseLong(s);
+                case null, default -> {
+                    ctx.status(400);
+                    ctx.json(Map.of("success", false, "mensaje", "Formato de eventId inválido"));
+                    return;
+                }
             }
 
 
-            Integer usuarioId;
+            int usuarioId;
             Object userIdObj = datosQR.get("userId");
-            if (userIdObj instanceof Integer) {
-                usuarioId = (Integer) userIdObj;
-            } else if (userIdObj instanceof Long) {
-                usuarioId = ((Long) userIdObj).intValue();
-            } else if (userIdObj instanceof Double) {
-                usuarioId = ((Double) userIdObj).intValue();
-            } else if (userIdObj instanceof String) {
-                usuarioId = Integer.parseInt((String) userIdObj);
-            } else {
-                ctx.status(400);
-                ctx.json(Map.of("success", false, "mensaje", "Formato de userId inválido"));
-                return;
+            switch (userIdObj) {
+                case Integer i -> usuarioId = i;
+                case Long l -> usuarioId = l.intValue();
+                case Double v -> usuarioId = v.intValue();
+                case String s -> usuarioId = Integer.parseInt(s);
+                case null, default -> {
+                    ctx.status(400);
+                    ctx.json(Map.of("success", false, "mensaje", "Formato de userId inválido"));
+                    return;
+                }
             }
 
 
@@ -195,7 +193,16 @@ public class ControladorInscripcion {
 
             if (inscripcion.isAsistio()) {
                 ctx.status(409);
-                ctx.json(Map.of("success", false, "mensaje", "Asistencia ya registrada"));
+                ctx.json(Map.of("success", false, "mensaje", "Asistencia ha sido registrada previamente"));
+                return;
+            }
+
+            LocalDate fechaEvento = inscripcion.getEvento().getFechaHora().toLocalDate();
+            LocalDate hoy = LocalDate.now();
+
+            if (!fechaEvento.equals(hoy)) {
+                ctx.status(409);
+                ctx.json(Map.of("success", false, "mensaje", "Solo se puede registrar asistencia el día del evento"));
                 return;
             }
 

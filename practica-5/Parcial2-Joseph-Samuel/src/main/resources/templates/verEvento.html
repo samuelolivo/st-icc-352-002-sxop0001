@@ -74,7 +74,7 @@
         </div>
 
         <div class="mb-4">
-            <a href="/eventos" class="btn btn-outline-secondary">
+            <a href="/evento/lista" class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left"></i> Volver a la lista
             </a>
         </div>
@@ -188,7 +188,50 @@
                 </div>
             </div>
         </div>
+        <div th:if="${not #lists.isEmpty(evento.inscripciones)}" class="mt-5 card border-0 shadow-sm">
+            <div class="card-header bg-secondary text-white d-flex align-items-center gap-2">
+                <i class="bi bi-bar-chart-fill"></i>
+                <h5 class="mb-0 h6">Estadísticas del Evento</h5>
+            </div>
+            <div class="card-body">
 
+                <div class="row g-3 mb-4">
+                    <div class="col-4">
+                        <div class="text-center p-3 rounded" style="background: #f8f9fa;">
+                            <div class="text-muted small text-uppercase fw-semibold" style="font-size: .75rem; letter-spacing: .05em;">Total inscritos</div>
+                            <div class="fs-3 fw-medium mt-1" th:text="${totalInscritos}">0</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-center p-3 rounded" style="background: #f8f9fa;">
+                            <div class="text-muted small text-uppercase fw-semibold" style="font-size: .75rem; letter-spacing: .05em;">Total asistentes</div>
+                            <div class="fs-3 fw-medium mt-1 text-success" th:text="${totalAsistentes}">0</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-center p-3 rounded" style="background: #f8f9fa;">
+                            <div class="text-muted small text-uppercase fw-semibold" style="font-size: .75rem; letter-spacing: .05em;">% Asistencia</div>
+                            <div class="fs-3 fw-medium mt-1 text-primary" th:text="${porcentajeAsistencia} + '%'">0%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <p class="text-muted small mb-2">Inscripciones por día</p>
+                        <div style="position: relative; height: 220px;">
+                            <canvas id="chartInscripcionesDia"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="text-muted small mb-2">Asistencia por hora</p>
+                        <div style="position: relative; height: 220px;">
+                            <canvas id="chartAsistenciaHora"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -261,6 +304,61 @@
         }
     });
 </script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script th:inline="javascript">
+    (function () {
+        const rawInscripciones = /*[[${inscripcionesPorDia}]]*/ {};
+        const rawAsistencia    = /*[[${asistenciaPorHora}]]*/ {};
 
+        const canvasInsc = document.getElementById('chartInscripcionesDia');
+        const canvasAsis = document.getElementById('chartAsistenciaHora');
+        if (!canvasInsc || !canvasAsis) return;
+
+        const commonOpts = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { size: 11 }, color: '#6c757d' }
+                },
+                y: {
+                    grid: { color: 'rgba(0,0,0,0.06)' },
+                    ticks: { font: { size: 11 }, color: '#6c757d', stepSize: 1, precision: 0 },
+                    beginAtZero: true
+                }
+            }
+        };
+
+        new Chart(canvasInsc, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(rawInscripciones),
+                datasets: [{
+                    data: Object.values(rawInscripciones),
+                    backgroundColor: '#0d6efd',
+                    borderRadius: 4,
+                    borderSkipped: false
+                }]
+            },
+            options: commonOpts
+        });
+
+        new Chart(canvasAsis, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(rawAsistencia).map(h => h + ':00'),
+                datasets: [{
+                    data: Object.values(rawAsistencia),
+                    backgroundColor: '#198754',
+                    borderRadius: 4,
+                    borderSkipped: false
+                }]
+            },
+            options: commonOpts
+        });
+    })();
+</script>
 </body>
 </html>
