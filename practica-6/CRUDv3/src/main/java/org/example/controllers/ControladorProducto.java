@@ -1,0 +1,151 @@
+package org.example.controllers;
+
+import io.javalin.http.Context;
+import io.javalin.http.UploadedFile;
+import org.example.Main;
+import org.example.models.Carrito;
+import org.example.models.Producto;
+import org.example.models.Usuario;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.example.Main.*;
+
+public class ControladorProducto {
+
+    public static void vistaListar(Context ctx) {
+        Usuario usuarioLogueado = ctx.sessionAttribute(Main.KeySession.USUARIO.name());
+        Map<String, Object> model = new HashMap<>();
+
+        int paginaActual = ctx.queryParamAsClass("page", Integer.class).getOrDefault(1);
+        int tamanoPagina = 10;
+
+        List<Producto> productos = servicioProducto.listarPaginados(paginaActual, tamanoPagina);
+        long totalProductos = servicioProducto.contarActivos();
+
+        boolean tieneSiguiente = (long) paginaActual * tamanoPagina < totalProductos;
+
+        int cantidadCarrito = 0;
+        if (usuarioLogueado != null) {
+
+            List<Producto> lista;
+            if (servicioUsuario.usurioNoAutenticado(usuarioLogueado)) {
+                Carrito carrito = ctx.sessionAttribute(Main.KeySession.CARRITO_NA.name());
+                lista = carrito.getListaProducto();
+            }
+            else {
+                lista = servicioCarrito.listarProductos(usuarioLogueado.getId());
+            }
+
+            if (lista != null) {
+                cantidadCarrito = lista.size();
+            }
+        }
+
+        model.put("productos", productos);
+        model.put("paginaActual", paginaActual);
+        model.put("tieneSiguiente", tieneSiguiente);
+        model.put("usuario", usuarioLogueado);
+        model.put("cantidadCarrito", cantidadCarrito);
+
+        ctx.sessionAttribute(Main.KeySession.REFERER.name(), "/producto/lista?page=" + paginaActual);
+        ctx.render("templates/productos.html", model);
+    }
+
+    public static void vistaCrear(Context ctx) {
+        ctx.render("templates/admin/crearProducto.html");
+    }
+
+    public static void crear(Context ctx) {
+        String nombre = ctx.formParam("nombre");
+        String precioStr = ctx.formParam("precio");
+        String cantidadStr = ctx.formParam("cantidad");
+        String descripcion = ctx.formParam("descripcion");
+
+        List<String> imagenesBase64 = procesarImagenes(ctx);
+
+        if (nombre != null && precioStr != null && !imagenesBase64.isEmpty()) {
+            BigDecimal precio = new BigDecimal(precioStr);
+            int cantidad = Integer.parseInt(cantidadStr);
+
+            servicioProducto.crear(nombre, precio, cantidad, descripcion, imagenesBase64);
+        }
+        ctx.redirect("/producto/lista");
+    }
+
+    public static void eliminar(Context ctx) {
+        int id = Integer.parseInt(ctx.pathParam("id"));
+        servicioProducto.borrarPorId(id);
+        ctx.redirect("/producto/lista");
+    }
+
+    public static void vistaModificar(Context ctx) {
+        int id = Integer.parseInt(ctx.pathParam("id"));
+        Producto producto = servicioProducto.buscarActivoPorId(id);
+
+        if (producto != null) {
+            Map<String, Object> model = new HashMap<>();
+            model.put("producto", producto);
+            ctx.render("templates/admin/editarProducto.html", model);
+        } else {
+            ctx.redirect("/producto/lista");
+        }
+    }
+
+    public static void modificar(Context ctx) {
+        int id = Integer.parseInt(ctx.formParam("id"));
+        String nombre = ctx.formParam("nombre");
+        BigDecimal precio = new BigDecimal(ctx.formParam("precio"));
+        int cantidad = Integer.parseInt(ctx.formParam("cantidad"));
+        String descripcion = ctx.formParam("descripcion");
+
+        List<String> imagenesBase64 = procesarImagenes(ctx);
+
+        servicioProducto.modificarPorId(id, nombre, precio, cantidad, descripcion, imagenesBase64);
+        ctx.redirect("/producto/lista");
+    }
+
+
+    private static List<String> procesarImagenes(Context ctx) {
+        List<String> listaBase64 = new ArrayList<>();
+        List<UploadedFile> archivos = ctx.uploadedFiles("imagenes");
+
+        for (UploadedFile archivo : archivos) {
+            try {
+                if (archivo.size() > 0 && archivo.filename() != null && !archivo.filename().isBlank()) {
+                    byte[] bytes = archivo.content().readAllBytes();
+                    String base64 = Base64.getEncoder().encodeToString(bytes);
+                    String dataUri = "data:" + archivo.contentType() + ";base64," + base64;
+                    listaBase64.add(dataUri);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        return listaBase64;
+    }
+
+    public static void vistaVer(Context ctx) {
+        int id = Integer.parseInt(ctx.pathParam("id"));
+        Producto producto = servicioProducto.buscarActivoPorId(id);
+
+        if (producto != null) {
+            Map<String, Object> model = new HashMap<>();
+            model.put("producto", producto);
+
+            model.put("comentarios", servicioComentario.listarPorProducto(id));
+            model.put("usuario", ctx.sessionAttribute(Main.KeySession.USUARIO.name()));
+
+            ctx.render("templates/verProducto.html", model);
+            ctx.sessionAttribute(Main.KeySession.REFERER.name(), ctx.path());
+        } else {
+            ctx.redirect("/producto/lista");
+        }
+    }
+}
