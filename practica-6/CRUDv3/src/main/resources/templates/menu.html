@@ -1,5 +1,11 @@
 <div th:fragment="menu" class="d-flex justify-content-end align-items-center gap-2">
 
+  <div class="d-flex align-items-center">
+      <span class="badge bg-info text-dark fw-bold">
+          En línea: <span id="contador-usuarios">1</span>
+      </span>
+  </div>
+
   <div class="d-flex justify-content-end align-items-center gap-2">
     <a href="/usuario/lista" class="btn btn-secondary position-relative text-white fw-bold">
       Usuarios </a>
@@ -34,4 +40,34 @@
       Cerrar Sesión
     </a>
   </div>
+  <script>
+    (function() {
+      const protocol = location.protocol === "https:" ? "wss://" : "ws://";
+      const socket = new WebSocket(protocol + location.host + "/ws/notificaciones");
+
+      socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        console.log("Mensaje recibido:", data);
+
+        if (data.tipo === "CONTEO_USUARIOS") {
+          const el = document.getElementById("contador-usuarios");
+          if (el) el.innerText = data.cantidad;
+        }
+
+        if (data.tipo === "ELIMINAR_COMENTARIO") {
+          const comentarioDiv = document.getElementById("comentario-" + data.id);
+          if (comentarioDiv) {
+            comentarioDiv.style.transition = "all 0.5s ease";
+            comentarioDiv.style.opacity = "0";
+            comentarioDiv.style.transform = "translateX(20px)";
+            setTimeout(() => comentarioDiv.remove(), 500);
+          }
+        }
+      };
+
+      socket.onclose = () => console.warn("WebSocket cerrado. Reintentando...");
+    })();
+  </script>
+  </script>
 </div>
+

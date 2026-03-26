@@ -5,6 +5,8 @@ import io.javalin.http.staticfiles.Location;
 import io.javalin.rendering.template.JavalinThymeleaf;
 import org.example.controllers.*;
 import org.example.services.*;
+import io.javalin.websocket.WsConfig;
+import io.javalin.websocket.WsContext;
 
 public class Main {
 
@@ -72,16 +74,15 @@ public class Main {
 
             config.routes.post("/comentarios/crear", ControladorComentario::crear);
             config.routes.get("/admin/comentarios/eliminar/{idComentario}/{idProducto}", ControladorComentario::eliminar);
+            config.routes.ws("/ws/notificaciones", ControladorNotificacion::gestionarWebsocket);
 
             config.fileRenderer(new JavalinThymeleaf());
         });
-
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.println("Deteniendo servidor y cerrando base de datos...");
             BootStrapServices.stopDb();
         }));
-
 
         app.start(7070);
     }
