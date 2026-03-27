@@ -36,9 +36,16 @@ public class ControladorNotificacion {
     }
 
     private static void enviarConteoUsuarios() {
+        long cantidadUsuariosUnicos = sesionesActivas.stream()
+                .map(session -> (Usuario) session.sessionAttribute(Main.KeySession.USUARIO.name()))
+                .filter(u -> u != null && u.getRol() != RolesUsuario.NO_AUTENTICADO)
+                .map(u -> u.getId())
+                .distinct()
+                .count();
+
         broadcast(Map.of(
                 "tipo", "CONTEO_USUARIOS",
-                "cantidad", sesionesActivas.size()
+                "cantidad", cantidadUsuariosUnicos
         ));
     }
 
