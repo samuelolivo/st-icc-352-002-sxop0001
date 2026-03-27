@@ -4,7 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <title>Historial de Ventas</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <title>Dashboard y Historial de Ventas</title>
   <style>
     .invoice-card {
       background: white;
@@ -29,61 +31,175 @@
       font-size: 1.1rem;
       background-color: #f8f9fa;
     }
+    /* Estilos adicionales para el Dashboard */
+    .dashboard-card {
+      background: white;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      padding: 20px;
+      height: 100%;
+    }
   </style>
 </head>
-<body class="container mt-5">
+<body class="container mt-5 mb-5">
 
-<div class="row align-items-center mb-2">
+<div th:replace="templates/menu.html :: menu"></div>
+
+<div class="row align-items-center mb-3">
+  <div class="col-md-12">
+    <h2 class="fw-bold text-dark">Dashboard de Ventas</h2>
+    <p class="text-muted">Productos vendidos</p>
+  </div>
+</div>
+
+<div class="row mb-5 align-items-stretch">
+  <div class="col-md-4 mb-3">
+    <div class="dashboard-card shadow-sm d-flex flex-column justify-content-center align-items-center text-center">
+      <h5 class="text-secondary mb-3">Total de Facturas Emitidas</h5>
+      <h1 class="display-1 fw-bold text-success" id="contador-ventas" th:text="${totalVentasDashboard}">0</h1>
+    </div>
+  </div>
+
+  <div class="col-md-8 mb-3">
+    <div class="dashboard-card shadow-sm d-flex justify-content-center align-items-center">
+      <div style="width: 100%; max-width: 400px;">
+        <canvas id="graficoProductos"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="mb-5 border-2 text-dark">
+
+<div class="row align-items-center mb-4">
   <div class="col-md-6">
     <h2 class="fw-bold text-dark">Historial de Ventas</h2>
   </div>
+</div>
 
-  <div class="d-flex justify-content-end align-items-center gap-2">
-    <a href="/volver" class="btn btn-outline-secondary">Volver</a>
+<div id="contenedor-historial">
+  <div th:each="v : ${ventas}" class="invoice-card shadow-sm">
+
+    <div class="invoice-title d-flex justify-content-between align-items-center">
+      <h3 class="m-0 fw-bold">
+        <span th:text="${v.userCliente}">Nombre del Cliente</span> —
+        <span th:text="${#dates.format(v.fecha, 'dd/MM/yyyy')}">Fecha</span>
+      </h3>
+      <span class="text-right fw-bold text-secondary" th:text="${'ID: #' + v.id}">ID</span>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-invoice align-middle mb-0">
+        <thead>
+        <tr class="text-center">
+          <th class="text-start ps-4 py-3">Producto</th>
+          <th>Precio Unitario ($)</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="p : ${v.listaProducto}">
+          <td class="ps-4 fw-semibold text-primary" th:text="${p.nombre}">Producto</td>
+          <td class="text-center" th:text="${p.precio}">0.00</td>
+        </tr>
+        </tbody>
+        <tfoot>
+        <tr class="total-row">
+          <td colspan="1" class="text-end fw-bold py-3">Total de la Compra:</td>
+          <td class="text-center fw-bold text-success py-3" th:text="${'$ ' + v.getTotalVenta()}">0.00</td>
+        </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <div th:if="${#lists.isEmpty(ventas)}" class="text-center py-5" id="mensaje-vacio">
+    <div class="card p-5 border-dashed">
+      <h4 class="text-muted">No se han registrado compras aún.</h4>
+      <p>Las ventas aparecerán aquí una vez que los clientes procesen su carrito.</p>
+    </div>
   </div>
 </div>
 
-<div th:each="v : ${ventas}" class="invoice-card shadow-sm">
+<script th:inline="javascript">
+  document.addEventListener("DOMContentLoaded", function () {
 
-  <div class="invoice-title d-flex justify-content-between align-items-center">
-    <h3 class="m-0 fw-bold">
-      <span th:text="${v.userCliente}">Nombre del Cliente</span> —
-      <span th:text="${#dates.format(v.fecha, 'dd/MM/yyyy')}">Fecha</span>
-    </h3>
-    <span class="text-right" th:text="${'ID: #' + v.id}">ID</span>
-  </div>
+    const productosMap = /*[[${productosVendidosDashboard}]]*/ {};
 
-  <div class="table-responsive">
-    <table class="table table-invoice align-middle mb-0">
-      <thead>
-      <tr class="text-center">
-        <th class="text-start ps-4 py-3">Producto</th>
-        <th>Precio Unitario ($)</th>
-      </tr>
-      </thead>
-      <tbody>
-      <tr th:each="p : ${v.listaProducto}">
-        <td class="ps-4 fw-semibold" th:text="${p.nombre}">Producto</td>
-        <td class="text-center" th:text="${p.precio}">0.00</td>
-      </tr>
-      </tbody>
-      <tfoot>
-      <tr class="total-row">
-        <td colspan="3" class="text-end fw-bold py-3">Total de la Compra:</td>
-        <td class="text-end pe-4 fw-bold text-primary py-3"
-            th:text="${'$ ' + v.getTotalVenta()}">0.00</td>
-      </tr>
-      </tfoot>
-    </table>
-  </div>
-</div>
+    const nombresProductos = Object.keys(productosMap);
+    const cantidadesVendidas = Object.values(productosMap);
 
-<div th:if="${#lists.isEmpty(ventas)}" class="text-center py-5">
-  <div class="card p-5 border-dashed">
-    <h4 class="text-muted">No se han registrado compras aún.</h4>
-    <p>Las ventas aparecerán aquí una vez que los clientes procesen su carrito.</p>
-  </div>
-</div>
+    const ctx = document.getElementById('graficoProductos').getContext('2d');
 
+    const paletaColores = [
+      '#0d6efd', '#198754', '#dc3545', '#ffc107',
+      '#0dcaf0', '#6610f2', '#fd7e14', '#20c997'
+    ];
+
+    const graficaProductosVendidos = new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: nombresProductos,
+        datasets: [{
+          label: 'Unidades Vendidas',
+          data: cantidadesVendidas,
+          backgroundColor: paletaColores,
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'right' },
+          title: {
+            display: true,
+            text: 'Distribución de Productos Vendidos',
+            font: { size: 16 }
+          }
+        }
+      }
+    });
+
+    const protocolo = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+    const wsUrl = protocolo + window.location.host + "/ws/notificaciones";
+
+    let socket = new WebSocket(wsUrl);
+
+    socket.onopen = function() {
+      console.log("Conectado al WebSocket para el Dashboard.");
+    };
+
+    socket.onmessage = function(event) {
+      const mensaje = JSON.parse(event.data);
+
+      if (mensaje.tipo === "NUEVA_VENTA") {
+        console.log("Nueva venta recibida en tiempo real.", mensaje);
+
+        const contadorElemento = document.getElementById("contador-ventas");
+        let totalActual = parseInt(contadorElemento.innerText) || 0;
+        contadorElemento.innerText = totalActual + 1;
+
+        mensaje.productos.forEach(producto => {
+          let indice = graficaProductosVendidos.data.labels.indexOf(producto.nombre);
+
+          if (indice >= 0) {
+            graficaProductosVendidos.data.datasets[0].data[indice] += producto.cantidad;
+          } else {
+            graficaProductosVendidos.data.labels.push(producto.nombre);
+            graficaProductosVendidos.data.datasets[0].data.push(producto.cantidad);
+
+            const nuevoColor = paletaColores[graficaProductosVendidos.data.labels.length % paletaColores.length];
+            graficaProductosVendidos.data.datasets[0].backgroundColor.push(nuevoColor);
+          }
+        });
+
+        graficaProductosVendidos.update();
+      }
+    };
+
+    socket.onclose = function() {
+      console.log("Desconectado del WebSocket.");
+    };
+  });
+</script>
 </body>
 </html>

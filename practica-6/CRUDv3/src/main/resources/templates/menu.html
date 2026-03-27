@@ -20,7 +20,7 @@
             th:text="${cantidadCarrito}">0</span>
     </a>
 
-    <a th:if="${usuario != null && usuario.rol.name() == 'ADMIN'}" href="/admin/ventas" class="btn btn-secondary text-white fw-bold">Ventas Realizadas</a>
+    <a th:if="${usuario != null && usuario.rol.name() == 'ADMIN'}" href="/admin/ventas" class="btn btn-secondary text-white fw-bold">Dashboard Ventas</a>
   </div>
 
   <div th:if="${usuario == null or usuario.rol.name() == 'NO_AUTENTICADO'}">

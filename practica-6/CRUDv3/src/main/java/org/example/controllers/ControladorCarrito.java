@@ -5,6 +5,7 @@ import org.example.Main;
 import org.example.models.Carrito;
 import org.example.models.Producto;
 import org.example.models.Usuario;
+import org.example.models.Venta;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -151,7 +152,11 @@ public class ControladorCarrito {
         }
 
 
-        servicioVenta.registrar(nombreCliente, enCarrito);
+        Venta venta = servicioVenta.registrar(nombreCliente, enCarrito);
+        if (venta != null) {
+            ControladorNotificacion.notificarNuevaVenta(venta);
+        }
+
         if (servicioUsuario.usurioNoAutenticado(usuario)) {
             c.getListaProducto().clear();
         }else {
