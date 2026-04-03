@@ -40,7 +40,7 @@ public class EncuestaRepository {
                 .iterator().toList();
     }
 
-    public List<Encuesta> listarTodas() {
+    public List<Encuesta> listarTodo() {
         return ds.find(Encuesta.class).iterator().toList();
     }
 }

@@ -8,6 +8,8 @@ import org.example.models.Encuesta;
 import org.example.models.Usuario;
 import org.example.services.MongoDBService;
 
+import java.util.List;
+
 public class UsuarioRepository {
     private final Datastore ds;
 
@@ -38,5 +40,9 @@ public class UsuarioRepository {
         return ds.find(Usuario.class)
                 .filter(Filters.eq("email", email))
                 .first();
+    }
+
+    public List<Usuario> listarTodo() {
+        return ds.find(Usuario.class).iterator().toList();
     }
 }
