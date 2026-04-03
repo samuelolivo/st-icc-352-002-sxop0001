@@ -18,6 +18,7 @@ public class Encuesta {
     private String fotoBase64;
     private EstadoSincronizacion estadoSync;
     private String usuarioId;
+    private boolean estadoObjeto;
     private LocalDateTime fechaCreacion;
     private LocalDateTime fechaSincronizacion;
 
@@ -32,8 +33,9 @@ public class Encuesta {
         this.ubicacion = ubicacion;
         this.fotoBase64 = fotoBase64;
         this.usuarioId = usuarioId;
-        this.estadoSync = EstadoSincronizacion.PENDIENTE; // Por defecto empieza sin sincronizar
+        this.estadoSync = EstadoSincronizacion.PENDIENTE;
         this.fechaCreacion = LocalDateTime.now();
+        this.estadoObjeto = true;
     }
 
     public String getId() { return id; }
@@ -67,4 +69,7 @@ public class Encuesta {
     public void setFechaSincronizacion(LocalDateTime fechaSincronizacion) {
         this.fechaSincronizacion = fechaSincronizacion;
     }
+
+    public boolean isEstadoObjeto() { return estadoObjeto; }
+    public void setEstadoObjeto(boolean estadoObjeto) { this.estadoObjeto = estadoObjeto; }
 }

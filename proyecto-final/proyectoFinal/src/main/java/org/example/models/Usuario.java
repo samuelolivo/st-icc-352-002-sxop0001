@@ -14,7 +14,7 @@ public class Usuario {
     private String email;
     private String password;
     private RolUsuario rol;
-    private boolean activo;
+    private boolean estadoObjeto;
 
 
     public Usuario() {}
@@ -24,7 +24,7 @@ public class Usuario {
         this.email = email;
         this.password = password;
         this.rol = rol;
-        this.activo = true;
+        this.estadoObjeto = true;
     }
 
 
@@ -43,6 +43,6 @@ public class Usuario {
     public RolUsuario getRol() { return rol; }
     public void setRol(RolUsuario rol) { this.rol = rol; }
 
-    public boolean isActivo() { return activo; }
-    public void setActivo(boolean activo) { this.activo = activo; }
+    public boolean isEstadoObjeto() { return estadoObjeto; }
+    public void setEstadoObjeto(boolean estadoObjeto) { this.estadoObjeto = estadoObjeto; }
 }

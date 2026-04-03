@@ -2,7 +2,15 @@ package org.example.models;
 
 
 public enum RolUsuario {
-    ADMIN,
-    ENCUESTADOR,
-    SUPERVISOR
+    ADMIN("Administrador"),
+    ENCUESTADOR("Encuestador"),
+    SUPERVISOR("Supervisor");
+
+    private final String descripcion;
+    RolUsuario(String descripcion) {
+        this.descripcion = descripcion;
+    }
+    public String getDescripcion() {
+        return descripcion;
+    }
 }
