@@ -1,6 +1,8 @@
 package org.example.models;
 
+import dev.morphia.annotations.Embedded;
 
+@Embedded
 public class Ubicacion {
 
     private double latitud;

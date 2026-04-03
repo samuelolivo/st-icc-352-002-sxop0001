@@ -1,10 +1,16 @@
 package org.example.models;
 
+import dev.morphia.annotations.Entity;
+import dev.morphia.annotations.Id;
+import dev.morphia.annotations.IndexOptions;
+import dev.morphia.annotations.Indexed;
 
+@Entity("usuarios")
 public class Usuario {
-
+    @Id
     private String id;
     private String nombre;
+    @Indexed(options = @IndexOptions(unique = true))
     private String email;
     private String password;
     private RolUsuario rol;

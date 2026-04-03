@@ -1,15 +1,20 @@
 package org.example.models;
 
+import dev.morphia.annotations.Entity;
+import dev.morphia.annotations.Id;
+import dev.morphia.annotations.Property;
 import java.time.LocalDateTime;
 
-
+@Entity("encuestas")
 public class Encuesta {
 
+    @Id
     private String id;
     private String nombre;
     private String sector;
     private NivelEscolar nivelEscolar;
     private Ubicacion ubicacion;
+    @Property("foto_base64")
     private String fotoBase64;
     private EstadoSincronizacion estadoSync;
     private String usuarioId;
