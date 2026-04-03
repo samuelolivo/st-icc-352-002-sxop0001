@@ -2,10 +2,9 @@ package org.example.models;
 
 
 public enum NivelEscolar {
-    INICIAL,
-    PRIMARIO,
-    SECUNDARIO,
+    BASICO,
+    MEDIO,
     UNIVERSITARIO,
-    TECNICO,
-    OTRO
+    POSTGRADO,
+    DOCTORADO
 }
