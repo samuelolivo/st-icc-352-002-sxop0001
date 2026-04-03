@@ -3,7 +3,10 @@ package org.example.controllers;
 import io.javalin.http.Context;
 import org.example.models.Encuesta;
 import org.example.repository.EncuestaRepository;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class EncuestaController {
     private static EncuestaRepository repo = new EncuestaRepository();
@@ -22,7 +25,14 @@ public class EncuestaController {
     public static void vistaMapa(Context ctx) {
         ctx.render("templates/mapaEncuestas.html");
     }
+    public static void vistaListar(Context ctx) {
+        List<Encuesta> lista = repo.listarTodo();
 
+        Map<String, Object> model = new HashMap<>();
+        model.put("encuestas", lista);
+
+        ctx.render("templates/encuestas.html", model);
+    }
     public static void listarEncuestasJson(Context ctx) {
         List<Encuesta> lista = repo.listarTodo();
         ctx.json(lista);

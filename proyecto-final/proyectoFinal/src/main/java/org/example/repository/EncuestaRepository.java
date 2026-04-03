@@ -6,6 +6,8 @@ import dev.morphia.query.filters.Filters;
 import dev.morphia.query.updates.UpdateOperators;
 import org.example.models.Encuesta;
 import org.example.services.MongoDBService;
+
+import java.util.ArrayList;
 import java.util.List;
 
 public class EncuestaRepository {
@@ -45,6 +47,10 @@ public class EncuestaRepository {
     }
 
     public List<Encuesta> listarTodo() {
+        if (this.ds == null) {
+            System.err.println("Error: Datastore es nulo. Devolviendo lista vacía.");
+            return new ArrayList<>();
+        }
         return ds.find(Encuesta.class).iterator().toList();
     }
 }

@@ -22,9 +22,9 @@ public class Main {
 
             config.fileRenderer(new JavalinThymeleaf());
             config.routes.get("/", ctx -> ctx.redirect("/encuesta"));
-            config.routes.get("/encuesta", EncuestaController::mostrarFormulario);
+            config.routes.get("/encuesta/crear", EncuestaController::mostrarFormulario);
             config.routes.post("/encuesta/guardar", EncuestaController::crearEncuesta);
-
+            config.routes.get("/encuesta", EncuestaController::vistaListar);
             config.routes.get("/encuesta/mapa", EncuestaController::vistaMapa);
            // config.routes.get("/api/encuestas", EncuestaController::listarEncuestasJson);
         });
