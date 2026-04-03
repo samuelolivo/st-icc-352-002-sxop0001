@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <title>Mapa de Registros</title>
+    <style>#map { height: 500px; width: 100%; border-radius: 10px; }</style>
+</head>
+<body class="container mt-5">
+<h2 class="mb-4">Mapa de Georeferenciación</h2>
+<div id="map" class="shadow"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const map = L.map('map').setView([18.7357, -70.1627], 8); // Centrado en RD
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    fetch('/api/encuestas').then(r => r.json()).then(data => {
+        data.forEach(e => {
+            if(e.ubicacion) {
+                L.marker([e.ubicacion.latitud, e.ubicacion.longitud])
+                    .addTo(map)
+                    .bindPopup(`<b>${e.nombre}</b><br>${e.sector}`);
+            }
+        });
+    });
+</script>
+</body>
+</html>

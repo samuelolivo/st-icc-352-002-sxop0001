@@ -2,9 +2,15 @@ package org.example;
 
 import io.javalin.Javalin;
 import io.javalin.http.staticfiles.Location;
+import io.javalin.rendering.template.JavalinThymeleaf;
+import org.example.controllers.EncuestaController;
+
 
 public class Main {
+
     public static void main(String[] args) {
+
+
         var app = Javalin.create(config -> {
             config.staticFiles.add(staticFiles -> {
                 staticFiles.hostedPath = "/";
@@ -12,7 +18,18 @@ public class Main {
                 staticFiles.location = Location.CLASSPATH;
                 staticFiles.precompressMaxSize = -1;
             });
+
+
+            config.fileRenderer(new JavalinThymeleaf());
+            config.routes.get("/", ctx -> ctx.redirect("/encuesta"));
+            config.routes.get("/encuesta", EncuestaController::mostrarFormulario);
+            config.routes.post("/encuesta/guardar", EncuestaController::crearEncuesta);
+
+            config.routes.get("/encuesta/mapa", EncuestaController::vistaMapa);
+           // config.routes.get("/api/encuestas", EncuestaController::listarEncuestasJson);
         });
+
+
 
         app.start(7070);
     }

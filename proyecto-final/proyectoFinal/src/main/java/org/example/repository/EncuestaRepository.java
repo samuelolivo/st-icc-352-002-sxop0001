@@ -9,12 +9,16 @@ import org.example.services.MongoDBService;
 import java.util.List;
 
 public class EncuestaRepository {
-    private final Datastore ds;
+    private  Datastore ds;
 
     public EncuestaRepository() {
-        this.ds = MongoDBService.getDatastore();
+        try {
+            this.ds = MongoDBService.getDatastore();
+        } catch (Exception e) {
+            System.err.println("CRÍTICO: No se pudo conectar a MongoDB. La persistencia no funcionará.");
+            e.printStackTrace();
+        }
     }
-
     public void guardar(Encuesta encuesta) {
         ds.save(encuesta);
     }

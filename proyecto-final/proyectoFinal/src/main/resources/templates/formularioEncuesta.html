@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Nueva Encuesta</title>
+    <style>
+        body { background-color: #f8f9fa; }
+        .card { border-radius: 15px; border: none; }
+        #video-preview { width: 100%; border-radius: 10px; background: #000; }
+        #photo-canvas { display: none; }
+    </style>
+</head>
+<body class="container mt-5">
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow p-4">
+            <h2 class="fw-bold mb-4">Registro de Encuesta</h2>
+            <form id="formEncuesta">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Nombre</label>
+                    <input type="text" id="nombre" class="form-control" required>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Sector</label>
+                        <input type="text" id="sector" class="form-control" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Nivel Escolar</label>
+                        <select id="nivelEscolar" class="form-select">
+                            <option value="BASICO">Básico</option>
+                            <option value="MEDIO">Medio</option>
+                            <option value="GRADO">Grado Universitario</option>
+                            <option value="POSTGRADO">Postgrado</option>
+                            <option value="DOCTORADO">Doctorado</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Foto (Cámara)</label>
+                        <video id="video-preview" autoplay playsinline></video>
+                        <button type="button" id="btnSnap" class="btn btn-outline-primary btn-sm w-100 mt-2">Capturar</button>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Ubicación Actual</label>
+                        <div class="alert alert-info">
+                            <small>Lat: <span id="lat">...</span></small><br>
+                            <small>Lon: <span id="lon">...</span></small>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Guardar Encuesta</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<canvas id="photo-canvas"></canvas>
+
+<script>
+    let fotoBase64 = "";
+    let latitud = 0, longitud = 0;
+
+    navigator.geolocation.getCurrentPosition(p => {
+        latitud = p.coords.latitude; longitud = p.coords.longitude;
+        document.getElementById('lat').innerText = latitud;
+        document.getElementById('lon').innerText = longitud;
+    });
+
+
+    const video = document.getElementById('video-preview');
+    navigator.mediaDevices.getUserMedia({video: true}).then(s => video.srcObject = s);
+
+    document.getElementById('btnSnap').addEventListener('click', () => {
+        const canvas = document.getElementById('photo-canvas');
+        canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        fotoBase64 = canvas.toDataURL('image/png');
+        alert("Foto capturada");
+    });
+
+    document.getElementById('formEncuesta').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const payload = {
+            nombre: document.getElementById('nombre').value,
+            sector: document.getElementById('sector').value,
+            nivelEscolar: document.getElementById('nivelEscolar').value,
+            ubicacion: { latitud, longitud },
+            fotoBase64: fotoBase64
+        };
+
+        await fetch('/encuesta/guardar', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+        location.reload();
+    });
+</script>
+</body>
+</html>
