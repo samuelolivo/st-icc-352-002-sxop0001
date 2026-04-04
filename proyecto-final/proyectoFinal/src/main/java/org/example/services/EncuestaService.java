@@ -23,7 +23,12 @@ public class EncuestaService {
             throw new IllegalArgumentException("La fotografía en base 64 es obligatoria.");
         }
 
-        encuesta.setId(null);
+        if (encuesta.getId() != null && encuesta.getId().trim().isEmpty()) {
+            encuesta.setId(null);
+        }
+        if (encuesta.getId() == null) {
+            encuesta.setFechaCreacion(LocalDateTime.now());
+        }
         encuesta.setEstadoObjeto(true);
         encuesta.setEstadoSync(EstadoSincronizacion.SINCRONIZADO);
         encuesta.setFechaSincronizacion(LocalDateTime.now());
@@ -43,6 +48,12 @@ public class EncuestaService {
         encuestaRepository.guardar(encuesta);
     }
 
+    public Encuesta buscarPorId(String id) {
+        return buscarActivaPorId(id);
+    }
+    public void desactivar(String id) {
+        desactivarEncuesta(id);
+    }
     public List<Encuesta> listarTodasActivasPorUsuario(String usuarioId) {
         UsuarioService usuarioService = new UsuarioService();
         if (usuarioId == null || usuarioId.isBlank() || usuarioService.buscarActivoPorId(usuarioId) == null) {

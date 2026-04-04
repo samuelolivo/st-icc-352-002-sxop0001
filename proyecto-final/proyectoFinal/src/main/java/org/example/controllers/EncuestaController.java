@@ -34,6 +34,30 @@ public class EncuestaController {
 
         ctx.render("templates/encuestas.html", model);
     }
+
+    public static void mostrarEditar(Context ctx) {
+        String id = ctx.pathParam("id");
+        Encuesta encuesta = serv.buscarPorId(id);
+
+        if (encuesta == null) {
+            ctx.redirect("/encuesta");
+            return;
+        }
+
+        Map<String, Object> model = new HashMap<>();
+        model.put("encuesta", encuesta);
+        model.put("editando", true);
+
+        ctx.render("templates/formularioEncuesta.html", model);
+
+
+    }
+
+    public static void eliminar(Context ctx) {
+        String id = ctx.pathParam("id");
+        serv.desactivar(id);
+        ctx.redirect("/encuesta");
+    }
     public static void listarEncuestasJson(Context ctx) {
         List<Encuesta> lista = serv.listarTodasActivas();
         ctx.json(lista);
