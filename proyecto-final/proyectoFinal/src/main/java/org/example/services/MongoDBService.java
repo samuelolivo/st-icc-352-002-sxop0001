@@ -9,8 +9,7 @@ public class MongoDBService {
 
     public static Datastore getDatastore() {
         if (datastore == null) {
-            // cambiar luego
-            var mongoClient = MongoClients.create("mongodb+srv://tu_usuario:tu_password@cluster...");
+            var mongoClient = MongoClients.create("mongodb+srv://admin:admin@cluster0.yrwk11e.mongodb.net/?appName=Cluster0");
             datastore = Morphia.createDatastore(mongoClient);
         }
         return datastore;
