@@ -20,13 +20,30 @@ public class UsuarioService {
     }
 
     public void guardar(Usuario usuario) {
-        if (usuarioRepository.buscarPorEmail(usuario.getEmail()) != null) {
-            throw new IllegalArgumentException("Ya existe un usuario asociado a este correo.");
+        if (usuario.getId() != null && usuario.getId().trim().isEmpty()) {
+            usuario.setId(null);
+        }
+        Usuario usuarioExistente = usuarioRepository.buscarPorEmail(usuario.getEmail());
+        if (usuarioExistente != null) {
+            if (usuario.getId() == null || !usuarioExistente.getId().equals(usuario.getId())) {
+                throw new IllegalArgumentException("Ya existe un usuario asociado a este correo.");
+            }
         }
 
-        String hash = passwordEncryptor.encryptPassword(usuario.getPassword());
-        usuario.setPassword(hash);
+        if (usuario.getId() == null) {
+            String hash = passwordEncryptor.encryptPassword(usuario.getPassword());
+            usuario.setPassword(hash);
+        } else {
+            Usuario persistido = usuarioRepository.buscarPorId(usuario.getId());
+            if (usuario.getPassword() == null || usuario.getPassword().isBlank()) {
+                usuario.setPassword(persistido.getPassword());
+            } else {
+                String hash = passwordEncryptor.encryptPassword(usuario.getPassword());
+                usuario.setPassword(hash);
+            }
+        }
 
+        usuario.setEstadoObjeto(true);
         usuarioRepository.guardar(usuario);
     }
 

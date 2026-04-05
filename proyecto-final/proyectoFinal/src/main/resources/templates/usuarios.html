@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <title>Gestión de Usuarios</title>
+
+    <style>
+        body { background-color: #f8f9fa; }
+        .table-hover tbody tr.selected {
+            background-color: rgba(13,110,253,0.1);
+            cursor: pointer;
+            border-left: 5px solid #0d6efd;
+        }
+        tr { cursor: pointer; transition: all 0.2s; }
+        .table {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .badge-rol { font-size: 0.85rem; }
+    </style>
+</head>
+
+<body class="container mt-5">
+
+
+<div class="row align-items-center mb-4">
+    <div class="col-md-6">
+        <h2 class="fw-bold text-dark"><i class="bi bi-people-fill"></i> Usuarios del Sistema</h2>
+    </div>
+    <div class="col-md-6 text-end">
+        <div class="d-flex gap-2 justify-content-end">
+            <a href="/usuarios/crear" class="btn btn-success px-4 shadow-sm">
+                <i class="bi bi-person-plus"></i> Crear Usuario
+            </a>
+            <a id="btnEditar" href="#" class="btn btn-warning disabled px-4 shadow-sm">
+                <i class="bi bi-pencil"></i> Editar
+            </a>
+            <a id="btnEliminar" href="#" class="btn btn-danger disabled px-4 shadow-sm"
+               onclick="return confirm('¿Seguro que deseas eliminar (desactivar) este usuario?')">
+                <i class="bi bi-trash"></i> Eliminar
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-hover shadow-sm">
+        <thead class="table-dark">
+        <tr>
+            <th class="py-3 ps-4">Nombre</th>
+            <th class="py-3">Email</th>
+            <th class="py-3">Rol</th>
+            <th class="py-3 text-center">Estado</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr th:each="u : ${usuarios}"
+            th:attr="data-id=${u.id}, data-email=${u.email}"
+            class="usuario-row">
+
+            <td th:text="${u.nombre}" class="ps-4 fw-bold"></td>
+            <td th:text="${u.email}"></td>
+            <td>
+                <span th:text="${u.rol}"
+                      th:classappend="${u.rol.name() == 'ADMIN' ? 'badge bg-primary' : 'badge bg-info text-dark'}"
+                      class="badge-rol px-2 py-1">
+                </span>
+            </td>
+            <td class="text-center">
+                <span class="badge bg-success">Activo</span>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    const rows = document.querySelectorAll('.usuario-row');
+    const btnEditar = document.getElementById('btnEditar');
+    const btnEliminar = document.getElementById('btnEliminar');
+
+    rows.forEach(row => {
+        row.addEventListener('click', () => {
+            rows.forEach(r => r.classList.remove('selected'));
+
+            row.classList.add('selected');
+
+            const id = row.getAttribute('data-id');
+            const email = row.getAttribute('data-email');
+
+            if (email !== "admin@example.com") {
+                btnEditar.classList.remove('disabled');
+                btnEditar.href = `/admin/usuarios/editar/${id}`;
+
+                btnEliminar.classList.remove('disabled');
+                btnEliminar.href = `/admin/usuarios/eliminar/${id}`;
+            } else {
+                btnEditar.classList.add('disabled');
+                btnEliminar.classList.add('disabled');
+                btnEditar.href = "#";
+                btnEliminar.href = "#";
+            }
+        });
+    });
+</script>
+
+</body>
+</html>

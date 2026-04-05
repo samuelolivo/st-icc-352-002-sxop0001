@@ -4,6 +4,7 @@ import io.javalin.Javalin;
 import io.javalin.http.staticfiles.Location;
 import io.javalin.rendering.template.JavalinThymeleaf;
 import org.example.controllers.EncuestaController;
+import org.example.controllers.UsuarioController;
 
 
 public class Main {
@@ -30,6 +31,13 @@ public class Main {
 
             config.routes.get("/encuesta", EncuestaController::vistaListar);
             config.routes.get("/encuesta/mapa", EncuestaController::vistaMapa);
+
+
+            config.routes.get("/usuarios", UsuarioController::vistaListar);
+            config.routes.get("/usuarios/crear", UsuarioController::mostrarFormulario);
+            config.routes.post("/usuarios/guardar", UsuarioController::guardar);
+            config.routes.get("/admin/usuarios/editar/{id}", UsuarioController::mostrarEditar);
+            config.routes.get("/admin/usuarios/eliminar/{id}", UsuarioController::eliminar);
 
         });
 
