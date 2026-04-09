@@ -31,6 +31,7 @@ public class Main {
 
             config.routes.get("/encuesta", EncuestaController::vistaListar);
             config.routes.get("/encuesta/mapa", EncuestaController::vistaMapa);
+            config.routes.get("/encuesta/mapa/puntos", EncuestaController::listarEncuestasJson);
 
 
             config.routes.get("/usuarios", UsuarioController::vistaListar);
