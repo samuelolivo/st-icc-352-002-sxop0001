@@ -5,6 +5,8 @@ import dev.morphia.annotations.Id;
 import dev.morphia.annotations.IndexOptions;
 import dev.morphia.annotations.Indexed;
 
+import java.util.UUID;
+
 @Entity("usuarios")
 public class Usuario {
     @Id

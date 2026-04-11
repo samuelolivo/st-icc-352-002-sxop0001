@@ -11,13 +11,13 @@ RUN ./gradlew dependencies --no-daemon
 
 COPY src ./src
 
-RUN ./gradlew shadowJar --no-daemon
+RUN ./gradlew build -x test --no-daemon
 
 # Etapa 2: Producción (Runtime)
 FROM eclipse-temurin:25-jre-alpine
 WORKDIR /app
 
-COPY --from=builder /app/build/libs/*-all.jar ./app.jar
+COPY --from=builder /app/build/libs/*.jar ./app.jar
 
 EXPOSE 7070
 

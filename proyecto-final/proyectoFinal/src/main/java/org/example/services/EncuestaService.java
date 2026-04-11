@@ -10,9 +10,11 @@ import java.util.List;
 public class EncuestaService {
 
     private final EncuestaRepository encuestaRepository;
+    private final UsuarioService usuarioService;
 
-    public EncuestaService() {
-        this.encuestaRepository = new EncuestaRepository();
+    public EncuestaService(EncuestaRepository encuestaRepository, UsuarioService usuarioService) {
+        this.encuestaRepository = encuestaRepository;
+        this.usuarioService = usuarioService;
     }
 
     public void guardar(Encuesta encuesta) {
@@ -35,19 +37,6 @@ public class EncuestaService {
         encuestaRepository.guardar(encuesta);
     }
 
-    public void modificar(Encuesta encuesta) {
-        buscarActivaPorId(encuesta.getId());
-
-        if (encuesta.getUbicacion() == null) {
-            throw new IllegalArgumentException("La ubicación georeferencial es obligatoria.");
-        }
-        if (encuesta.getFotoBase64() == null || encuesta.getFotoBase64().trim().isEmpty()) {
-            throw new IllegalArgumentException("La fotografía en base 64 es obligatoria.");
-        }
-
-        encuestaRepository.guardar(encuesta);
-    }
-
     public Encuesta buscarPorId(String id) {
         return buscarActivaPorId(id);
     }
@@ -55,7 +44,7 @@ public class EncuestaService {
         desactivarEncuesta(id);
     }
     public List<Encuesta> listarTodasActivasPorUsuario(String usuarioId) {
-        UsuarioService usuarioService = new UsuarioService();
+
         if (usuarioId == null || usuarioId.isBlank() || usuarioService.buscarActivoPorId(usuarioId) == null) {
             throw new IllegalArgumentException("El id de usuario proporcionado es inválido o el usuario no existe.");
         }

@@ -1,27 +1,33 @@
 package org.example.controllers;
 
 import io.javalin.http.Context;
+import org.example.models.RolUsuario;
 import org.example.models.Usuario;
 import org.example.services.UsuarioService;
 import java.util.HashMap;
 import java.util.Map;
 
 public class UsuarioController {
-    private static UsuarioService serv = new UsuarioService();
+    private final UsuarioService usuarioService;
 
-    public static void vistaListar(Context ctx) {
+    public UsuarioController(UsuarioService usuarioService) {
+        this.usuarioService = usuarioService;
+    }
+
+    public void vistaListar(Context ctx) {
         Map<String, Object> model = new HashMap<>();
-        model.put("usuarios", serv.listarTodosActivos());
+        model.put("usuarios", usuarioService.listarTodosActivos());
         ctx.render("templates/usuarios.html", model);
     }
 
-    public static void mostrarFormulario(Context ctx) {
+    public void mostrarFormulario(Context ctx) {
+        Map<String, Object> model = new HashMap<>();
         ctx.render("templates/formularioUsuario.html");
     }
 
-    public static void mostrarEditar(Context ctx) {
+    public void mostrarEditar(Context ctx) {
         String id = ctx.pathParam("id");
-        Usuario u = serv.buscarActivoPorId(id);
+        Usuario u = usuarioService.buscarActivoPorId(id);
         if (u == null) { ctx.redirect("/usuarios"); return; }
 
         Map<String, Object> model = new HashMap<>();
@@ -30,14 +36,65 @@ public class UsuarioController {
         ctx.render("templates/formularioUsuario.html", model);
     }
 
-    public static void guardar(Context ctx) {
+    public void guardar(Context ctx) {
         Usuario u = ctx.bodyAsClass(Usuario.class);
-        serv.guardar(u);
+        usuarioService.guardar(u);
         ctx.status(201);
     }
 
-    public static void eliminar(Context ctx) {
-        serv.desactivarUsuario(ctx.pathParam("id"));
+    public void eliminar(Context ctx) {
+        usuarioService.desactivarUsuario(ctx.pathParam("id"));
         ctx.redirect("/usuarios");
+    }
+
+    public void vistaRegistro(Context ctx) {
+        Map<String, Object> model = new HashMap<>();
+        ctx.render("templates/registro.html", model);
+    }
+
+    public void registrar(Context ctx) {
+        try {
+            String nombre = ctx.formParam("nombre");
+            String email = ctx.formParam("email");
+            String password = ctx.formParam("password");
+            String passwordConfirmacion = ctx.formParam("passwordConfirmacion");
+
+
+            if (email == null || email.trim().isEmpty()) {
+                ctx.redirect("/registro?error=1");
+                return;
+            }
+
+            if (password == null || password.trim().isEmpty()) {
+                ctx.redirect("/registro?error=2");
+                return;
+            }
+
+            if (!password.equals(passwordConfirmacion)) {
+                ctx.redirect("/registro?error=3");
+                return;
+            }
+
+            if (usuarioService.buscarActivoPorEmail(email) != null) {
+                ctx.redirect("/registro?error=4");
+                return;
+            }
+
+            if (nombre == null || nombre.trim().isEmpty()) {
+                ctx.redirect("/registro?error=6");
+                return;
+            }
+
+
+            Usuario nuevoUsuario = new Usuario(nombre, email, password, RolUsuario.BRECHADOR);
+            usuarioService.guardar(nuevoUsuario);
+
+
+            ctx.redirect("/login?success=1");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            ctx.redirect("/registro?error=5");
+        }
     }
 }

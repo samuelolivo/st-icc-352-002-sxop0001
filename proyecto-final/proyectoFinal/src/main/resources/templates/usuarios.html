@@ -36,7 +36,7 @@
 <div class="row mb-4">
     <div class="col-12">
         <div class="d-flex gap-2 justify-content-end">
-            <a href="/usuarios/crear" class="btn btn-success px-4 shadow-sm">
+            <a href="/admin/usuarios/crear" class="btn btn-success px-4 shadow-sm">
                 <i class="bi bi-person-plus"></i> Crear Usuario
             </a>
             <a id="btnEditar" href="#" class="btn btn-warning disabled px-4 shadow-sm">
@@ -96,7 +96,7 @@
             const id = row.getAttribute('data-id');
             const email = row.getAttribute('data-email');
 
-            if (email !== "admin@example.com") {
+            if (email !== "admin@admin.com") {
                 btnEditar.classList.remove('disabled');
                 btnEditar.href = `/admin/usuarios/editar/${id}`;
 

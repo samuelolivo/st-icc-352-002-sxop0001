@@ -4,7 +4,7 @@ package org.example.models;
 public enum RolUsuario {
     ADMIN("Administrador"),
     ENCUESTADOR("Encuestador"),
-    SUPERVISOR("Supervisor");
+    BRECHADOR("Brechador");
 
     private final String descripcion;
     RolUsuario(String descripcion) {

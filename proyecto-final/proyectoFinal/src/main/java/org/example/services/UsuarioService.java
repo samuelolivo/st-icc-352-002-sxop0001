@@ -4,6 +4,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import org.example.models.Usuario;
 import org.example.repository.UsuarioRepository;
+import org.example.utils.JwtUtil;
 import org.jasypt.util.password.BasicPasswordEncryptor;
 
 import java.util.Date;
@@ -14,19 +15,25 @@ public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final BasicPasswordEncryptor passwordEncryptor;
 
-    public UsuarioService() {
-        this.usuarioRepository = new UsuarioRepository();
-        this.passwordEncryptor = new BasicPasswordEncryptor();
+    public UsuarioService(UsuarioRepository usuarioRepository, BasicPasswordEncryptor passwordEncryptor) {
+        this.usuarioRepository = usuarioRepository;
+        this.passwordEncryptor = passwordEncryptor;
     }
 
     public void guardar(Usuario usuario) {
+
         if (usuario.getId() != null && usuario.getId().trim().isEmpty()) {
             usuario.setId(null);
         }
+
         Usuario usuarioExistente = usuarioRepository.buscarPorEmail(usuario.getEmail());
         if (usuarioExistente != null) {
             if (usuario.getId() == null || !usuarioExistente.getId().equals(usuario.getId())) {
                 throw new IllegalArgumentException("Ya existe un usuario asociado a este correo.");
+            }
+
+            if (usuarioExistente.getEmail().equals("admin@admin.com")){
+                throw new IllegalArgumentException("Este usuario no puede ser modificado.");
             }
         }
 
@@ -34,9 +41,9 @@ public class UsuarioService {
             String hash = passwordEncryptor.encryptPassword(usuario.getPassword());
             usuario.setPassword(hash);
         } else {
-            Usuario persistido = usuarioRepository.buscarPorId(usuario.getId());
+            Usuario usuarioEnDB = usuarioRepository.buscarPorId(usuario.getId());
             if (usuario.getPassword() == null || usuario.getPassword().isBlank()) {
-                usuario.setPassword(persistido.getPassword());
+                usuario.setPassword(usuarioEnDB.getPassword());
             } else {
                 String hash = passwordEncryptor.encryptPassword(usuario.getPassword());
                 usuario.setPassword(hash);
@@ -47,23 +54,11 @@ public class UsuarioService {
         usuarioRepository.guardar(usuario);
     }
 
-    public void modificar(Usuario usuario) {
-        buscarActivoPorId(usuario.getId());
-        Usuario usuarioAnt = usuarioRepository.buscarPorEmail(usuario.getEmail());
-
-        if (usuarioAnt != null && !usuarioAnt.getId().equals(usuario.getId())) {
-            throw new IllegalArgumentException("Ya existe un usuario asociado a este correo.");
-        }
-
-        String hash = passwordEncryptor.encryptPassword(usuario.getPassword());
-        usuario.setPassword(hash);
-
-        usuarioRepository.guardar(usuario);
-    }
-
     public void desactivarUsuario(String id) {
-        buscarActivoPorId(id);
-        usuarioRepository.desactivar(id);
+        Usuario u = buscarActivoPorId(id);
+        if (u.getEmail().equals("admin@admin.com")) {
+            usuarioRepository.desactivar(id);
+        }
     }
 
     public String autenticar(String email, String passwordPlano) {
@@ -73,31 +68,10 @@ public class UsuarioService {
             boolean credencialesValidas = passwordEncryptor.checkPassword(passwordPlano, usuario.getPassword());
 
             if (credencialesValidas) {
-                return generarTokenJWT(usuario);
+                return JwtUtil.generarToken(usuario);
             }
         }
         return null;
-    }
-
-    private String generarTokenJWT(Usuario usuario) {
-        try {
-            String secretKey = "mi_clave_secreta_para_el_proyecto_icc362";
-            Algorithm algorithm = Algorithm.HMAC256(secretKey);
-
-            long tiempoExpiracionEnMilisegundos = 24L * 60 * 60 * 1000;
-            Date fechaExpiracion = new Date(System.currentTimeMillis() + tiempoExpiracionEnMilisegundos);
-
-            return JWT.create()
-                    .withIssuer("SistemaEncuestasApp")
-                    .withSubject(usuario.getEmail())
-                    .withClaim("usuarioId", usuario.getId())
-                    .withClaim("rol", usuario.getRol().name())
-                    .withExpiresAt(fechaExpiracion)
-                    .sign(algorithm);
-
-        } catch (Exception e) {
-            throw new RuntimeException("Error crítico interno al generar el token de seguridad", e);
-        }
     }
 
     public Usuario buscarActivoPorId(String id) {
@@ -106,6 +80,20 @@ public class UsuarioService {
         }
 
         Usuario usuario = usuarioRepository.buscarPorId(id);
+
+        if (usuario == null || !usuario.isEstadoObjeto()) {
+            throw new IllegalArgumentException("El usuario no existe.");
+        }
+
+        return usuario;
+    }
+
+    public Usuario buscarActivoPorEmail(String email) {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("El email del usuario no puede estar vacío.");
+        }
+
+        Usuario usuario = usuarioRepository.buscarPorEmail(email);
 
         if (usuario == null || !usuario.isEstadoObjeto()) {
             throw new IllegalArgumentException("El usuario no existe.");

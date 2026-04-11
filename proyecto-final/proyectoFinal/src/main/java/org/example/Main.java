@@ -4,12 +4,44 @@ import io.javalin.Javalin;
 import io.javalin.http.staticfiles.Location;
 import io.javalin.rendering.template.JavalinThymeleaf;
 import org.example.controllers.EncuestaController;
+import org.example.controllers.SesionController;
 import org.example.controllers.UsuarioController;
+import org.example.models.RolUsuario;
+import org.example.models.Usuario;
+import org.example.repository.EncuestaRepository;
+import org.example.repository.UsuarioRepository;
+import org.example.services.EncuestaService;
+import org.example.services.UsuarioService;
+import org.jasypt.util.password.BasicPasswordEncryptor;
 
 
 public class Main {
+    public static enum KeySession {
+        JWT,
+        REFERER;
+    }
 
     public static void main(String[] args) {
+        UsuarioRepository usuarioRepository = new UsuarioRepository();
+        EncuestaRepository encuestaRepository = new EncuestaRepository();
+
+        UsuarioService usuarioService = new UsuarioService(usuarioRepository, new BasicPasswordEncryptor());
+        EncuestaService encuestaService = new EncuestaService(encuestaRepository, usuarioService);
+
+        if (usuarioService.listarTodosActivos().isEmpty()) {
+            Usuario adminDefault = new Usuario(
+                    "Administrador del Sistema",
+                    "admin@admin.com",
+                    "admin",
+                    RolUsuario.ADMIN
+            );
+            usuarioService.guardar(adminDefault);
+            System.out.println("Base de datos inicializada: Usuario ADMIN creado por defecto.");
+        }
+
+        UsuarioController usuarioController = new UsuarioController(usuarioService);
+        EncuestaController encuestaController = new EncuestaController(encuestaService);
+        SesionController sesionController = new SesionController(usuarioService);
 
 
         var app = Javalin.create(config -> {
@@ -22,23 +54,33 @@ public class Main {
 
 
             config.fileRenderer(new JavalinThymeleaf());
-            config.routes.get("/", ctx -> ctx.redirect("/encuesta"));
-            config.routes.get("/encuesta/crear", EncuestaController::mostrarFormulario);
-            config.routes.post("/encuesta/guardar", EncuestaController::crearEncuesta);
+            config.routes.before("/**", sesionController::sesion);
+            config.routes.before("/admin/**", sesionController::adminValido);
+            config.routes.before("/encuestador/**", sesionController::encuestadorValido);
+            config.routes.get("/", sesionController::defaultPath);
+            config.routes.get("/volver", sesionController::volver);
 
-            config.routes.get("/admin/encuesta/editar/{id}", EncuestaController::mostrarEditar);
-            config.routes.get("/admin/encuesta/eliminar/{id}", EncuestaController::eliminar);
+            config.routes.get("/login", sesionController::vistaLogin);
+            config.routes.post("/login/procesar", sesionController::procesarLogin);
+            config.routes.get("/logout", sesionController::logout);
 
-            config.routes.get("/encuesta", EncuestaController::vistaListar);
-            config.routes.get("/encuesta/mapa", EncuestaController::vistaMapa);
-            config.routes.get("/encuesta/mapa/puntos", EncuestaController::listarEncuestasJson);
+            config.routes.get("/registro", usuarioController::vistaRegistro);
+            config.routes.post("/registrar", usuarioController::registrar);
+
+            config.routes.get("/encuestador/encuesta/crear", encuestaController::mostrarFormulario);
+            config.routes.post("/encuestador/encuesta/guardar", encuestaController::crearEncuesta);
+            config.routes.get("/encuestador/encuesta/editar/{id}", encuestaController::mostrarEditar);
+            config.routes.get("/encuestador/encuesta/eliminar/{id}", encuestaController::eliminar);
+            config.routes.get("/encuesta", encuestaController::vistaListar);
+            config.routes.get("/encuesta/mapa", encuestaController::vistaMapa);
+            config.routes.get("/encuesta/mapa/puntos", encuestaController::listarEncuestasJson);
 
 
-            config.routes.get("/usuarios", UsuarioController::vistaListar);
-            config.routes.get("/usuarios/crear", UsuarioController::mostrarFormulario);
-            config.routes.post("/usuarios/guardar", UsuarioController::guardar);
-            config.routes.get("/admin/usuarios/editar/{id}", UsuarioController::mostrarEditar);
-            config.routes.get("/admin/usuarios/eliminar/{id}", UsuarioController::eliminar);
+            config.routes.get("/usuarios", usuarioController::vistaListar);
+            config.routes.get("/admin/usuarios/crear", usuarioController::mostrarFormulario);
+            config.routes.post("/admin/usuarios/guardar", usuarioController::guardar);
+            config.routes.get("/admin/usuarios/editar/{id}", usuarioController::mostrarEditar);
+            config.routes.get("/admin/usuarios/eliminar/{id}", usuarioController::eliminar);
 
         });
 
