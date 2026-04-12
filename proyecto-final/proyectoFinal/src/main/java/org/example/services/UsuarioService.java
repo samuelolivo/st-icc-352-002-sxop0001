@@ -56,7 +56,7 @@ public class UsuarioService {
 
     public void desactivarUsuario(String id) {
         Usuario u = buscarActivoPorId(id);
-        if (u.getEmail().equals("admin@admin.com")) {
+        if (!u.getEmail().equals("admin@admin.com")) {
             usuarioRepository.desactivar(id);
         }
     }
