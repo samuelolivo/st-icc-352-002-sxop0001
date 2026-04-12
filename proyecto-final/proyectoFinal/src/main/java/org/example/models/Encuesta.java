@@ -1,11 +1,13 @@
 package org.example.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Id;
 import dev.morphia.annotations.Property;
 import java.time.LocalDateTime;
 
 @Entity("encuestas")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Encuesta {
 
     @Id
@@ -21,7 +23,6 @@ public class Encuesta {
     private boolean estadoObjeto;
     private LocalDateTime fechaCreacion;
     private LocalDateTime fechaSincronizacion;
-
 
     public Encuesta() {}
 

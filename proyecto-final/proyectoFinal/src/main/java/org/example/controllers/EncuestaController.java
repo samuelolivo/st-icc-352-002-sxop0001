@@ -79,13 +79,14 @@ public class EncuestaController {
         encuestaService.desactivar(id);
         ctx.redirect("/encuesta");
     }
+
     public void listarEncuestasJson(Context ctx) {
         List<Encuesta> lista = encuestaService.listarTodasActivas();
         ctx.json(lista);
     }
-    public void sincronizarEncuestas(Context ctx) {
 
-        List<Encuesta> encuestasPendientes = ctx.bodyAsClass(new ArrayList<Encuesta>().getClass());
+    public void sincronizarEncuestas(Context ctx) {
+        Encuesta[] encuestasPendientes = ctx.bodyAsClass(Encuesta[].class);
 
         for (Encuesta encuesta : encuestasPendientes) {
             encuestaService.guardar(encuesta);

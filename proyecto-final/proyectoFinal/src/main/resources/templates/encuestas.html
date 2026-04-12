@@ -29,14 +29,7 @@
 </div>
 
 <div th:if="${rol != null and (rol == 'ADMIN' or rol == 'ENCUESTADOR')}">
-    <div th:replace="~{templates/botonesCrud.html :: botonesCrud}"></div>
-</div>
-
-<div th:if="${rol != null and (rol == 'ADMIN' or rol == 'ENCUESTADOR')}">
-    <button id="btnSync" class="btn btn-info text-dark fw-bold d-inline-flex align-items-center gap-2 shadow-sm" style="display: none;">
-        <i class="bi bi-cloud-arrow-up fs-5"></i>
-        <span>Sincronizar (<span id="badgeSync">0</span>)</span>
-    </button>
+    <div th:replace="~{templates/botonesCrud.html :: botonesCrud(true)}"></div>
 </div>
 
 <table class="table table-hover shadow-sm">
@@ -133,11 +126,13 @@
     async function revisarPendientes() {
         try {
             const pendientes = await getEncuestasPendientes();
-            if (pendientes.length > 0) {
-                btnSync.style.display = 'inline-flex';
+            if (btnSync && pendientes.length > 0) {
+                btnSync.classList.remove('d-none');
+                btnSync.classList.add('d-inline-flex');
                 badgeSync.innerText = pendientes.length;
-            } else {
-                btnSync.style.display = 'none';
+            } else if (btnSync) {
+                btnSync.classList.add('d-none');
+                btnSync.classList.remove('d-inline-flex');
             }
         } catch (err) {
             console.error("Error leyendo IndexedDB:", err);
