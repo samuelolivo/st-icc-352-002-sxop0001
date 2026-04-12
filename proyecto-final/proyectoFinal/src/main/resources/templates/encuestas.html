@@ -77,7 +77,7 @@
 </script>
 
 <script type="module">
-    import { getEncuestasPendientes, clearEncuestasSincronizadas } from '/js/storage.js';
+    import { getEncuestasPendientes, clearEncuestaSincronizada } from '/js/storage.js';
 
     const rows = document.querySelectorAll('.encuesta-row');
     const btnCrear = document.getElementById('btnCrear');
@@ -155,24 +155,32 @@
 
         try {
             const pendientes = await getEncuestasPendientes();
+            let sincronizadas = 0;
 
-            const response = await fetch('/encuestador/encuesta/sincronizar', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(pendientes)
-            });
+            for (const encuesta of pendientes) {
+                const response = await fetch('/encuestador/encuesta/sincronizar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(encuesta)
+                });
 
-            if (response.ok) {
-                const ids = pendientes.map(e => e.localId);
-                await clearEncuestasSincronizadas(ids);
+                if (response.ok) {
+                    await clearEncuestaSincronizada(encuesta.localId);
+                    sincronizadas++;
+                } else {
+                    console.error("Falló la encuesta con localId:", encuesta.localId);
+                }
+            }
 
-                alert(`Se han sincronizado ${pendientes.length} encuestas al servidor central.`);
+            if (sincronizadas > 0) {
+                alert(`Se han sincronizado ${sincronizadas} de ${pendientes.length} encuestas.`);
                 window.location.reload();
             } else {
-                alert("Intenta de nuevo más tarde.");
+                alert("No se pudo sincronizar ninguna encuesta. Verifica tu conexión.");
                 btnSync.innerHTML = contenidoOriginal;
                 btnSync.disabled = false;
             }
+
         } catch (error) {
             console.error("Error durante la sincronización:", error);
             alert("Error de red al intentar sincronizar.");

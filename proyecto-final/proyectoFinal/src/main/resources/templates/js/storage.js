@@ -47,16 +47,16 @@ export async function getEncuestasPendientes() {
     });
 }
 
-export async function clearEncuestasSincronizadas(localIds) {
+export async function clearEncuestaSincronizada(localId) {
     const db = await openDB();
     return new Promise((resolve, reject) => {
         const transaction = db.transaction([STORE_ENCUESTAS], "readwrite");
         const store = transaction.objectStore(STORE_ENCUESTAS);
 
-        localIds.forEach(id => store.delete(id));
+        const request = store.delete(localId);
 
-        transaction.oncomplete = () => resolve();
-        transaction.onerror = (e) => reject(e.target.error);
+        request.onsuccess = () => resolve();
+        request.onerror = (e) => reject(e.target.error);
     });
 }
 

@@ -86,12 +86,8 @@ public class EncuestaController {
     }
 
     public void sincronizarEncuestas(Context ctx) {
-        Encuesta[] encuestasPendientes = ctx.bodyAsClass(Encuesta[].class);
-
-        for (Encuesta encuesta : encuestasPendientes) {
-            encuestaService.guardar(encuesta);
-        }
-
+        Encuesta encuestaPendiente = ctx.bodyAsClass(Encuesta.class);
+        encuestaService.guardar(encuestaPendiente);
         ctx.status(200).result("Sincronización exitosa");
     }
 

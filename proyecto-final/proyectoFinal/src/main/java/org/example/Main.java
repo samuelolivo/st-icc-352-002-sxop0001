@@ -48,6 +48,8 @@ public class Main {
         WebSocketController webSocketController = new WebSocketController();
 
         var app = Javalin.create(config -> {
+            config.http.maxRequestSize = 10_000_000L;
+
             config.staticFiles.add(staticFiles -> {
                 staticFiles.hostedPath = "/";
                 staticFiles.directory = "/templates";
