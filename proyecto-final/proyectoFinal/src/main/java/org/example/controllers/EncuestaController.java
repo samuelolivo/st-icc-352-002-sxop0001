@@ -8,6 +8,7 @@ import org.example.models.Encuesta;
 import org.example.services.EncuestaService;
 import org.example.utils.JwtUtil;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -82,4 +83,16 @@ public class EncuestaController {
         List<Encuesta> lista = encuestaService.listarTodasActivas();
         ctx.json(lista);
     }
+    public void sincronizarEncuestas(Context ctx) {
+
+        List<Encuesta> encuestasPendientes = ctx.bodyAsClass(new ArrayList<Encuesta>().getClass());
+
+        for (Encuesta encuesta : encuestasPendientes) {
+            encuestaService.guardar(encuesta);
+        }
+
+        ctx.status(200).result("Sincronización exitosa");
+    }
+
+
 }

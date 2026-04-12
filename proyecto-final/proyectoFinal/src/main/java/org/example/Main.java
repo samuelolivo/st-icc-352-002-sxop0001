@@ -15,6 +15,8 @@ import org.example.services.EncuestaService;
 import org.example.services.UsuarioService;
 import org.jasypt.util.password.BasicPasswordEncryptor;
 
+import java.util.Map;
+
 
 public class Main {
     public static enum KeySession {
@@ -51,6 +53,7 @@ public class Main {
                 staticFiles.directory = "/templates";
                 staticFiles.location = Location.CLASSPATH;
                 staticFiles.precompressMaxSize = -1;
+                staticFiles.headers = Map.of("Service-Worker-Allowed", "/");
             });
 
 
@@ -75,7 +78,7 @@ public class Main {
             config.routes.get("/encuesta", encuestaController::vistaListar);
             config.routes.get("/encuesta/mapa", encuestaController::vistaMapa);
             config.routes.get("/encuesta/mapa/puntos", encuestaController::listarEncuestasJson);
-
+            config.routes.post("/encuestador/encuesta/sincronizar", encuestaController::sincronizarEncuestas);
 
             config.routes.get("/usuarios", usuarioController::vistaListar);
             config.routes.get("/admin/usuarios/crear", usuarioController::mostrarFormulario);
