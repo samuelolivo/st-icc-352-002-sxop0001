@@ -20,7 +20,7 @@
 </head>
 <body class="container mt-5">
 
-<div th:replace="templates/menu.html :: menu"></div>
+<div th:replace="~{templates/menu.html :: menu}"></div>
 
 <div class="row align-items-center mb-4">
     <div class="col-md-6">
@@ -29,7 +29,7 @@
 </div>
 
 <div th:if="${rol != null and (rol == 'ADMIN' or rol == 'ENCUESTADOR')}">
-    <div th:replace="templates/botonesCrud.html :: botonesCrud"></div>
+    <div th:replace="~{templates/botonesCrud.html :: botonesCrud}"></div>
 </div>
 
 <div th:if="${rol != null and (rol == 'ADMIN' or rol == 'ENCUESTADOR')}">

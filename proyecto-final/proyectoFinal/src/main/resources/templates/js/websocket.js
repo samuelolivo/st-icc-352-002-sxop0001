@@ -15,6 +15,8 @@ export function connectWebSocket() {
 
     socket.onclose = () => {
         console.log("WebSocket desconectado");
+        console.warn("OFFLINE FUNCIONA");
+        socket = null;
     };
 
     socket.onerror = (err) => {

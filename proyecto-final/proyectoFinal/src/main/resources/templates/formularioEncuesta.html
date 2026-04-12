@@ -93,7 +93,7 @@
 <canvas id="photo-canvas"></canvas>
 
 <script type="module">
-    import { saveEncuesta } from '/js/storage.js';
+    import { guardarEncuesta } from '/js/storage.js';
     import { connectWebSocket, sendMessage } from '/js/websocket.js';
 
     const meta = document.getElementById('metadata');
@@ -165,7 +165,11 @@
         }
     });
 
-    connectWebSocket();
+    try {
+        connectWebSocket();
+    } catch (err) {
+        console.warn("NO LLEGO EL WEBSOCKET:", err.message);
+    }
 
     document.getElementById('formEncuesta').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -199,12 +203,12 @@
                     alert("Error en el servidor al intentar guardar.");
                 }
             } catch (err) {
-                saveEncuesta(payload);
+               await guardarEncuesta(payload);
                 alert("Error de red. La encuesta se guardó localmente y se enviará al recuperar conexión.");
                 window.location.href = "/encuesta";
             }
         } else {
-            saveEncuesta(payload);
+            await guardarEncuesta(payload);
             alert("Sin conexión a internet. Encuesta guardada en la base de datos local.");
             window.location.href = "/encuesta";
         }

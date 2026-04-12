@@ -15,9 +15,9 @@ self.addEventListener('install', event => {
         caches.open(CACHE_NAME).then(cache => {
             console.log('Caché abierto');
             return cache.addAll(URLS_CACHE);
-        })
+        }).then(() => self.skipWaiting())
     );
-    self.skipWaiting();
+
 });
 
 self.addEventListener('activate', event => {
@@ -27,9 +27,8 @@ self.addEventListener('activate', event => {
                 cacheNames.filter(name => name !== CACHE_NAME)
                     .map(name => caches.delete(name))
             );
-        })
+        }).then(() => self.clients.claim())
     );
-    self.clients.claim();
 });
 
 self.addEventListener('fetch', event => {
