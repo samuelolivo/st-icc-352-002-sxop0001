@@ -9,10 +9,9 @@
     <style>
         body { background-color: #f8f9fa; }
         .card { border-radius: 15px; border: none; }
-        #video-preview { width: 100%; border-radius: 10px; background: #000; }
+        #video-preview, #img-preview { width: 100%; border-radius: 10px; background: #000; min-height: 200px; }
         #photo-canvas { display: none; }
         .foto-preview-container { position: relative; }
-        .badge-snap { position: absolute; top: 10px; right: 10px; }
     </style>
 </head>
 <body class="container mt-5">
@@ -57,20 +56,23 @@
 
                 <div class="row mb-4">
                     <div class="col-md-6 foto-preview-container">
-                        <label class="form-label fw-bold">Foto (Cámara)</label>
-                        <video id="video-preview" autoplay playsinline></video>
-                        <button type="button" id="btnSnap" class="btn btn-outline-primary btn-sm w-100 mt-2">
-                            <i class="bi bi-camera"></i> Capturar Nueva Foto
+                        <label class="form-label fw-bold">Fotografía</label>
+                        <div style="position: relative;">
+                            <video id="video-preview" autoplay playsinline></video>
+                            <img id="img-preview" src="" style="display: none;" class="shadow-sm"/>
+                        </div>
+                        <button type="button" id="btnSnap" class="btn btn-outline-primary btn-sm w-100 mt-2 fw-bold">
+                            <i class="bi bi-camera"></i> Capturar Foto
                         </button>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label fw-bold">Coordenadas</label>
+                        <label class="form-label fw-bold">Ubicación GPS</label>
                         <div class="alert alert-info">
                             <small>Latitud: <span id="lat">Cargando...</span></small><br>
                             <small>Longitud: <span id="lon">Cargando...</span></small>
                         </div>
                         <p class="text-muted small" th:if="${encuesta != null}">
-                            Las coordenadas no se pueden modificar
+                            Las coordenadas de una encuesta existente son inalterables.
                         </p>
                     </div>
                 </div>
@@ -80,7 +82,7 @@
                         <i class="bi bi-arrow-left"></i> Cancelar
                     </a>
                     <button type="submit" class="btn btn-primary px-5 shadow-sm fw-bold">
-                        <i class="bi bi-save"></i> Guardar Cambios
+                        <i class="bi bi-save"></i> Guardar Encuesta
                     </button>
                 </div>
             </form>
@@ -90,16 +92,20 @@
 
 <canvas id="photo-canvas"></canvas>
 
-<script>
-
+<script type="module">
     const meta = document.getElementById('metadata');
     let fotoBase64 = meta.getAttribute('data-foto') || "";
     let latitud = parseFloat(meta.getAttribute('data-lat')) || 0;
     let longitud = parseFloat(meta.getAttribute('data-lon')) || 0;
 
+    const video = document.getElementById('video-preview');
+    const imgPreview = document.getElementById('img-preview');
+    const btnSnap = document.getElementById('btnSnap');
+    const canvas = document.getElementById('photo-canvas');
+    let streamActual = null;
+
     document.getElementById('lat').innerText = latitud !== 0 ? latitud : "...";
     document.getElementById('lon').innerText = longitud !== 0 ? longitud : "...";
-
 
     if (latitud === 0) {
         navigator.geolocation.getCurrentPosition(p => {
@@ -108,34 +114,64 @@
             document.getElementById('lat').innerText = latitud;
             document.getElementById('lon').innerText = longitud;
         }, (error) => {
-            console.error("Error obteniendo ubicación:", error);
-            alert("Por favor, permite el acceso a la ubicación.");
+            console.error("Error GPS:", error);
+            alert("Es necesario el acceso a la ubicación para validar la encuesta.");
         });
     }
 
+    async function encenderCamara() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            streamActual = stream;
+            video.srcObject = stream;
+            video.style.display = 'block';
+            imgPreview.style.display = 'none';
+            btnSnap.innerHTML = '<i class="bi bi-camera"></i> Capturar Foto';
+        } catch (err) {
+            console.error("Error acceso cámara:", err);
+            alert("No se pudo activar la cámara.");
+        }
+    }
 
-    const video = document.getElementById('video-preview');
-    navigator.mediaDevices.getUserMedia({video: true})
-        .then(s => video.srcObject = s)
-        .catch(err => console.warn("No se pudo acceder a la cámara:", err));
+    if (fotoBase64 && fotoBase64.trim() !== "") {
+        imgPreview.src = fotoBase64;
+        imgPreview.style.display = 'block';
+        video.style.display = 'none';
+        btnSnap.innerHTML = '<i class="bi bi-arrow-repeat"></i> Cambiar Foto';
+    } else {
+        encenderCamara();
+    }
 
-    document.getElementById('btnSnap').addEventListener('click', () => {
-        const canvas = document.getElementById('photo-canvas');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        canvas.getContext('2d').drawImage(video, 0, 0);
-        fotoBase64 = canvas.toDataURL('image/png');
-        alert("¡Foto capturada con éxito!");
+    btnSnap.addEventListener('click', () => {
+        if (video.style.display === 'none') {
+            encenderCamara();
+        } else {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+
+            fotoBase64 = canvas.toDataURL('image/png');
+            imgPreview.src = fotoBase64;
+            imgPreview.style.display = 'block';
+            video.style.display = 'none';
+            btnSnap.innerHTML = '<i class="bi bi-arrow-repeat"></i> Volver a capturar';
+
+            if (streamActual) {
+                streamActual.getTracks().forEach(track => track.stop());
+            }
+        }
     });
 
     document.getElementById('formEncuesta').addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const idExistente = document.getElementById('encuestaId').value;
+        if (!fotoBase64) {
+            alert("La fotografía es obligatoria.");
+            return;
+        }
 
         const payload = {
-
-            id: idExistente === "" ? null : idExistente,
+            id: document.getElementById('encuestaId').value || null,
             nombre: document.getElementById('nombre').value,
             sector: document.getElementById('sector').value,
             nivelEscolar: document.getElementById('nivelEscolar').value,
@@ -144,24 +180,23 @@
         };
 
         try {
-            const response = await fetch('/encuesta/guardar', {
+            const response = await fetch('/encuestador/encuesta/guardar', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
 
             if (response.ok) {
-
                 window.location.href = "/encuesta";
             } else {
-                const errorData = await response.text();
-                alert("Error al procesar: " + errorData);
+                alert("Error en el servidor. Revisa tu conexión y vuelve a intentar.");
             }
         } catch (err) {
-            console.error("Error en el fetch:", err);
-            alert("No se pudo conectar con el servidor.");
+            console.error("Fallo de red:", err);
+            alert("No se pudo contactar al servidor. Asegúrate de tener conexión a internet.");
         }
     });
 </script>
+
 </body>
 </html>
