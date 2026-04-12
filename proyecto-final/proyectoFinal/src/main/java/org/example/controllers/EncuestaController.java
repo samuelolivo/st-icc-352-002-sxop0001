@@ -1,8 +1,12 @@
 package org.example.controllers;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import io.javalin.http.Context;
+import org.example.Main;
 import org.example.models.Encuesta;
 import org.example.services.EncuestaService;
+import org.example.utils.JwtUtil;
 
 import java.util.HashMap;
 import java.util.List;
@@ -31,10 +35,22 @@ public class EncuestaController {
     }
 
     public void vistaListar(Context ctx) {
+        String jwt = ctx.sessionAttribute(Main.KeySession.JWT.name());
+        String nombre = null;
+        String rol = null;
+
+        if (jwt != null) {
+            DecodedJWT djwt = JWT.decode(jwt);
+            nombre = djwt.getClaim("nombre").asString();
+            rol = djwt.getClaim("rol").asString();
+        }
+
         List<Encuesta> lista = encuestaService.listarTodasActivas();
 
         Map<String, Object> model = new HashMap<>();
         model.put("encuestas", lista);
+        model.put("nombre", nombre);
+        model.put("rol", rol);
 
         ctx.render("templates/encuestas.html", model);
     }

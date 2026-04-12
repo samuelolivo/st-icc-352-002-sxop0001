@@ -10,17 +10,17 @@
     </a>
   </div>
 
-  <div th:if="${usuario == null or usuario.rol.name() == 'NO_AUTENTICADO'}">
+  <div th:if="${nombre == null}">
     <a href="/login" class="btn btn-primary text-white fw-bold">
       Iniciar Sesión
     </a>
   </div>
 
-  <div th:if="${usuario != null && usuario.rol.name() != 'NO_AUTENTICADO'}"
+  <div th:if="${nombre != null}"
        class="d-flex align-items-center gap-2">
 
         <span class="text-muted small"
-              th:text="${'Hola, ' + usuario.usuario}">
+              th:text="${'Hola, ' + nombre}">
         </span>
 
     <a href="/logout" class="btn btn-outline-danger fw-bold">

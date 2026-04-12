@@ -22,6 +22,7 @@ public class JwtUtil {
                 .withSubject(usuario.getId())
                 .withClaim("email", usuario.getEmail())
                 .withClaim("rol", usuario.getRol().name())
+                .withClaim("nombre", usuario.getNombre())
                 .withExpiresAt(fechaExpiracion)
                 .sign(algoritmo);
     }

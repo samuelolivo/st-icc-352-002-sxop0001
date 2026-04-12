@@ -1,9 +1,14 @@
 package org.example.controllers;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import io.javalin.http.Context;
+import org.example.Main;
 import org.example.models.RolUsuario;
 import org.example.models.Usuario;
 import org.example.services.UsuarioService;
+import org.example.utils.JwtUtil;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,8 +20,20 @@ public class UsuarioController {
     }
 
     public void vistaListar(Context ctx) {
+        String jwt = ctx.sessionAttribute(Main.KeySession.JWT.name());
+        String nombre = null;
+        String rol = null;
+
+        if (jwt != null) {
+            DecodedJWT djwt = JWT.decode(jwt);
+            nombre = djwt.getClaim("nombre").asString();
+            rol = djwt.getClaim("rol").asString();
+        }
+
         Map<String, Object> model = new HashMap<>();
         model.put("usuarios", usuarioService.listarTodosActivos());
+        model.put("nombre", nombre);
+        model.put("rol", rol);
         ctx.render("templates/usuarios.html", model);
     }
 
