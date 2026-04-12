@@ -6,6 +6,7 @@ import io.javalin.rendering.template.JavalinThymeleaf;
 import org.example.controllers.EncuestaController;
 import org.example.controllers.SesionController;
 import org.example.controllers.UsuarioController;
+import org.example.controllers.WebSocketController;
 import org.example.models.RolUsuario;
 import org.example.models.Usuario;
 import org.example.repository.EncuestaRepository;
@@ -42,7 +43,7 @@ public class Main {
         UsuarioController usuarioController = new UsuarioController(usuarioService);
         EncuestaController encuestaController = new EncuestaController(encuestaService);
         SesionController sesionController = new SesionController(usuarioService);
-
+        WebSocketController webSocketController = new WebSocketController();
 
         var app = Javalin.create(config -> {
             config.staticFiles.add(staticFiles -> {
@@ -82,9 +83,8 @@ public class Main {
             config.routes.get("/admin/usuarios/editar/{id}", usuarioController::mostrarEditar);
             config.routes.get("/admin/usuarios/eliminar/{id}", usuarioController::eliminar);
 
+            config.routes.ws("/ws", webSocketController::configurarRutas);
         });
-
-
 
         app.start(7070);
     }

@@ -32,6 +32,13 @@
     <div th:replace="templates/botonesCrud.html :: botonesCrud"></div>
 </div>
 
+<div th:if="${rol != null and (rol == 'ADMIN' or rol == 'ENCUESTADOR')}">
+    <button id="btnSync" class="btn btn-info text-dark fw-bold d-inline-flex align-items-center gap-2 shadow-sm" style="display: none;">
+        <i class="bi bi-cloud-arrow-up fs-5"></i>
+        <span>Sincronizar (<span id="badgeSync">0</span>)</span>
+    </button>
+</div>
+
 <table class="table table-hover shadow-sm">
     <thead class="table-dark">
     <tr>
@@ -62,7 +69,9 @@
     </tbody>
 </table>
 
-<script>
+<script type="module">
+    import { getEncuestasPendientes, clearEncuestasSincronizadas } from '/js/storage.js';
+
     const rows = document.querySelectorAll('.encuesta-row');
     const btnCrear = document.getElementById('btnCrear');
     const btnEditar = document.getElementById('btnEditar');
@@ -101,6 +110,65 @@
             if (confirm('¿Seguro que deseas eliminar esta encuesta?')) {
                 window.location.href = btnEliminar.dataset.target;
             }
+        }
+    });
+
+    const btnSync = document.getElementById('btnSync');
+    const badgeSync = document.getElementById('badgeSync');
+
+    async function revisarPendientes() {
+        try {
+            const pendientes = await getEncuestasPendientes();
+            if (pendientes.length > 0) {
+                btnSync.style.display = 'inline-flex';
+                badgeSync.innerText = pendientes.length;
+            } else {
+                btnSync.style.display = 'none';
+            }
+        } catch (err) {
+            console.error("Error leyendo IndexedDB:", err);
+        }
+    }
+
+    revisarPendientes();
+
+    btnSync.addEventListener('click', async (e) => {
+        e.preventDefault();
+
+        if (!navigator.onLine) {
+            alert("No tienes conexión a internet en este momento. Conéctate a un Wi-Fi o enciende los datos para sincronizar.");
+            return;
+        }
+
+        const contenidoOriginal = btnSync.innerHTML;
+        btnSync.disabled = true;
+        btnSync.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Subiendo...';
+
+        try {
+            const pendientes = await getEncuestasPendientes();
+
+            const response = await fetch('/encuestador/encuesta/sincronizar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(pendientes)
+            });
+
+            if (response.ok) {
+                const ids = pendientes.map(e => e.localId);
+                await clearEncuestasSincronizadas(ids);
+
+                alert(`Se han sincronizado ${pendientes.length} encuestas al servidor central.`);
+                window.location.reload();
+            } else {
+                alert("Intenta de nuevo más tarde.");
+                btnSync.innerHTML = contenidoOriginal;
+                btnSync.disabled = false;
+            }
+        } catch (error) {
+            console.error("Error durante la sincronización:", error);
+            alert("Error de red al intentar sincronizar.");
+            btnSync.innerHTML = contenidoOriginal;
+            btnSync.disabled = false;
         }
     });
 </script>
