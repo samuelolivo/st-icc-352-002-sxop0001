@@ -1,6 +1,12 @@
-<div th:fragment="botonesCrud" class="row mb-4">
+<div th:fragment="botonesCrud(mostrarSync)" class="row mb-4">
   <div class="col-12">
     <div class="d-flex justify-content-end align-items-center gap-2">
+
+      <button id="btnSync" th:if="${mostrarSync}"
+              class="btn btn-info text-white fw-bold d-none align-items-center gap-2 shadow-sm">
+        <i class="bi bi-cloud-arrow-up"></i>
+        <span>Sincronizar (<span id="badgeSync">0</span>)</span>
+      </button>
 
       <a href="#" id="btnCrear" class="btn btn-success text-white fw-bold d-inline-flex align-items-center gap-2 shadow-sm">
         <i class="bi bi-plus"></i>

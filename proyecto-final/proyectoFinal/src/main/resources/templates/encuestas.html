@@ -20,7 +20,7 @@
 </head>
 <body class="container mt-5">
 
-<div th:replace="templates/menu.html :: menu"></div>
+<div th:replace="~{templates/menu.html :: menu}"></div>
 
 <div class="row align-items-center mb-4">
     <div class="col-md-6">
@@ -29,7 +29,7 @@
 </div>
 
 <div th:if="${rol != null and (rol == 'ADMIN' or rol == 'ENCUESTADOR')}">
-    <div th:replace="templates/botonesCrud.html :: botonesCrud"></div>
+    <div th:replace="~{templates/botonesCrud.html :: botonesCrud(true)}"></div>
 </div>
 
 <table class="table table-hover shadow-sm">
@@ -63,6 +63,22 @@
 </table>
 
 <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/serviceworker.js', { scope: '/' })
+                .then(registration => {
+                    console.log('Service Worker registrado con éxito:', registration.scope);
+                })
+                .catch(error => {
+                    console.log('Fallo en el registro del Service Worker:', error);
+                });
+        });
+    }
+</script>
+
+<script type="module">
+    import { getEncuestasPendientes, clearEncuestaSincronizada } from '/js/storage.js';
+
     const rows = document.querySelectorAll('.encuesta-row');
     const btnCrear = document.getElementById('btnCrear');
     const btnEditar = document.getElementById('btnEditar');
@@ -101,6 +117,75 @@
             if (confirm('¿Seguro que deseas eliminar esta encuesta?')) {
                 window.location.href = btnEliminar.dataset.target;
             }
+        }
+    });
+
+    const btnSync = document.getElementById('btnSync');
+    const badgeSync = document.getElementById('badgeSync');
+
+    async function revisarPendientes() {
+        try {
+            const pendientes = await getEncuestasPendientes();
+            if (btnSync && pendientes.length > 0) {
+                btnSync.classList.remove('d-none');
+                btnSync.classList.add('d-inline-flex');
+                badgeSync.innerText = pendientes.length;
+            } else if (btnSync) {
+                btnSync.classList.add('d-none');
+                btnSync.classList.remove('d-inline-flex');
+            }
+        } catch (err) {
+            console.error("Error leyendo IndexedDB:", err);
+        }
+    }
+
+    revisarPendientes();
+
+    btnSync.addEventListener('click', async (e) => {
+        e.preventDefault();
+
+        if (!navigator.onLine) {
+            alert("No tienes conexión a internet en este momento. Conéctate a un Wi-Fi o enciende los datos para sincronizar.");
+            return;
+        }
+
+        const contenidoOriginal = btnSync.innerHTML;
+        btnSync.disabled = true;
+        btnSync.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Subiendo...';
+
+        try {
+            const pendientes = await getEncuestasPendientes();
+            let sincronizadas = 0;
+
+            for (const encuesta of pendientes) {
+                const response = await fetch('/encuestador/encuesta/sincronizar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(encuesta)
+                });
+
+                if (response.ok) {
+                    await clearEncuestaSincronizada(encuesta.localId);
+                    sincronizadas++;
+                } else {
+                    console.error("Falló la encuesta con localId:", encuesta.localId);
+                }
+            }
+
+            if (sincronizadas > 0) {
+                alert(`Se han sincronizado ${sincronizadas} de ${pendientes.length} encuestas.`);
+                window.location.reload();
+            } else {
+                alert("No se pudo sincronizar ninguna encuesta. Verifica tu conexión.");
+                btnSync.innerHTML = contenidoOriginal;
+                btnSync.disabled = false;
+            }
+
+        } catch (error) {
+            console.error("Error durante la sincronización:", error);
+            alert("Error de red al intentar sincronizar.");
+            btnSync.innerHTML = contenidoOriginal;
+            btnSync.disabled = false;
         }
     });
 </script>

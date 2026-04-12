@@ -93,6 +93,9 @@
 <canvas id="photo-canvas"></canvas>
 
 <script type="module">
+    import { guardarEncuesta } from '/js/storage.js';
+    import { connectWebSocket, enviarMensaje } from '/js/websocket.js';
+
     const meta = document.getElementById('metadata');
     let fotoBase64 = meta.getAttribute('data-foto') || "";
     let latitud = parseFloat(meta.getAttribute('data-lat')) || 0;
@@ -162,6 +165,12 @@
         }
     });
 
+    try {
+        connectWebSocket();
+    } catch (err) {
+        console.warn("NO LLEGO EL WEBSOCKET:", err.message);
+    }
+
     document.getElementById('formEncuesta').addEventListener('submit', async (e) => {
         e.preventDefault();
 
@@ -179,21 +188,29 @@
             fotoBase64: fotoBase64
         };
 
-        try {
-            const response = await fetch('/encuestador/encuesta/guardar', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
+        if (navigator.onLine) {
+            try {
+                const response = await fetch('/encuestador/encuesta/guardar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
 
-            if (response.ok) {
+                if (response.ok) {
+                    enviarMensaje(payload);
+                    window.location.href = "/encuesta";
+                } else {
+                    alert("Error en el servidor al intentar guardar.");
+                }
+            } catch (err) {
+               await guardarEncuesta(payload);
+                alert("Error de red. La encuesta se guardó localmente y se enviará al recuperar conexión.");
                 window.location.href = "/encuesta";
-            } else {
-                alert("Error en el servidor. Revisa tu conexión y vuelve a intentar.");
             }
-        } catch (err) {
-            console.error("Fallo de red:", err);
-            alert("No se pudo contactar al servidor. Asegúrate de tener conexión a internet.");
+        } else {
+            await guardarEncuesta(payload);
+            alert("Sin conexión a internet. Encuesta guardada en la base de datos local.");
+            window.location.href = "/encuesta";
         }
     });
 </script>

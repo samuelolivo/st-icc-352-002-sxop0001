@@ -6,6 +6,7 @@ import io.javalin.rendering.template.JavalinThymeleaf;
 import org.example.controllers.EncuestaController;
 import org.example.controllers.SesionController;
 import org.example.controllers.UsuarioController;
+import org.example.controllers.WebSocketController;
 import org.example.models.RolUsuario;
 import org.example.models.Usuario;
 import org.example.repository.EncuestaRepository;
@@ -13,6 +14,8 @@ import org.example.repository.UsuarioRepository;
 import org.example.services.EncuestaService;
 import org.example.services.UsuarioService;
 import org.jasypt.util.password.BasicPasswordEncryptor;
+
+import java.util.Map;
 
 
 public class Main {
@@ -42,14 +45,17 @@ public class Main {
         UsuarioController usuarioController = new UsuarioController(usuarioService);
         EncuestaController encuestaController = new EncuestaController(encuestaService);
         SesionController sesionController = new SesionController(usuarioService);
-
+        WebSocketController webSocketController = new WebSocketController();
 
         var app = Javalin.create(config -> {
+            config.http.maxRequestSize = 10_000_000L;
+
             config.staticFiles.add(staticFiles -> {
                 staticFiles.hostedPath = "/";
                 staticFiles.directory = "/templates";
                 staticFiles.location = Location.CLASSPATH;
                 staticFiles.precompressMaxSize = -1;
+                staticFiles.headers = Map.of("Service-Worker-Allowed", "/");
             });
 
 
@@ -74,7 +80,7 @@ public class Main {
             config.routes.get("/encuesta", encuestaController::vistaListar);
             config.routes.get("/encuesta/mapa", encuestaController::vistaMapa);
             config.routes.get("/encuesta/mapa/puntos", encuestaController::listarEncuestasJson);
-
+            config.routes.post("/encuestador/encuesta/sincronizar", encuestaController::sincronizarEncuestas);
 
             config.routes.get("/usuarios", usuarioController::vistaListar);
             config.routes.get("/admin/usuarios/crear", usuarioController::mostrarFormulario);
@@ -82,9 +88,8 @@ public class Main {
             config.routes.get("/admin/usuarios/editar/{id}", usuarioController::mostrarEditar);
             config.routes.get("/admin/usuarios/eliminar/{id}", usuarioController::eliminar);
 
+            config.routes.ws("/ws", webSocketController::configurarRutas);
         });
-
-
 
         app.start(7070);
     }
