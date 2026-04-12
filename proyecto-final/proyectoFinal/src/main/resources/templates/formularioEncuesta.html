@@ -94,7 +94,7 @@
 
 <script type="module">
     import { guardarEncuesta } from '/js/storage.js';
-    import { connectWebSocket, sendMessage } from '/js/websocket.js';
+    import { connectWebSocket, enviarMensaje } from '/js/websocket.js';
 
     const meta = document.getElementById('metadata');
     let fotoBase64 = meta.getAttribute('data-foto') || "";
@@ -197,7 +197,7 @@
                 });
 
                 if (response.ok) {
-                    sendMessage(payload);
+                    enviarMensaje(payload);
                     window.location.href = "/encuesta";
                 } else {
                     alert("Error en el servidor al intentar guardar.");
