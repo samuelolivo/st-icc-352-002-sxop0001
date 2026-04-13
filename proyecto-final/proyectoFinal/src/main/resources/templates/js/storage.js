@@ -35,6 +35,36 @@ export async function guardarEncuesta(encuesta) {
     });
 }
 
+export async function actualizarEncuestaLocal(localId, encuesta) {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([STORE_ENCUESTAS], "readwrite");
+        const store = transaction.objectStore(STORE_ENCUESTAS);
+
+        // Es fundamental mantener el mismo localId para sobreescribir el registro correcto
+        encuesta.localId = localId;
+        encuesta.estado = "PENDIENTE";
+        encuesta.fechaEdicionLocal = new Date().toISOString();
+
+        const request = store.put(encuesta);
+
+        request.onsuccess = () => resolve();
+        request.onerror = (e) => reject(e.target.error);
+    });
+}
+
+export async function getEncuestaPorId(localId) {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction(["encuestas_store"], "readonly");
+        const store = transaction.objectStore("encuestas_store");
+        const request = store.get(Number(localId));
+
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = (e) => reject(e.target.error);
+    });
+}
+
 export async function getEncuestasPendientes() {
     const db = await openDB();
     return new Promise((resolve, reject) => {

@@ -32,35 +32,67 @@
     <div th:replace="~{templates/botonesCrud.html :: botonesCrud(true)}"></div>
 </div>
 
-<table class="table table-hover shadow-sm">
-    <thead class="table-dark">
-    <tr>
-        <th class="py-3 ps-4">Foto</th>
-        <th class="py-3">Nombre</th>
-        <th class="py-3">Sector</th>
-        <th class="py-3">Nivel Escolar</th>
-        <th class="py-3 text-center">Ubicación</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="e : ${encuestas}" th:attr="data-id=${e.id}" class="encuesta-row">
-        <td class="ps-4">
-            <img th:if="${e.fotoBase64 != null}" th:src="${e.fotoBase64}" class="img-miniatura shadow-sm">
-            <span th:if="${e.fotoBase64 == null}" class="text-muted small">Sin foto</span>
-        </td>
-        <td th:text="${e.nombre}" class="fw-bold"></td>
-        <td th:text="${e.sector}"></td>
-        <td th:text="${e.nivelEscolar}"></td>
-        <td class="text-center">
-            <span class="badge bg-info text-dark"
-                  th:text="${e.ubicacion != null} ? ${e.ubicacion.latitud + ', ' + e.ubicacion.longitud} : 'Sin GPS'"></span>
-        </td>
-    </tr>
-    <tr th:if="${#lists.isEmpty(encuestas)}">
-        <td colspan="5" class="text-center py-4 text-muted">No hay encuestas registradas</td>
-    </tr>
-    </tbody>
-</table>
+<div id="contenedorLocal" class="d-none">
+    <div class="row align-items-center mb-3">
+        <div class="col-md-12">
+            <h4 class="fw-bold text-warning"><i class="bi bi-wifi-off"></i> Pendientes de Sincronizar</h4>
+        </div>
+    </div>
+
+    <div class="table-responsive mb-5">
+        <table class="table table-hover shadow-sm">
+            <thead class="table-warning">
+            <tr>
+                <th class="py-3 ps-4">Foto</th>
+                <th class="py-3">Nombre</th>
+                <th class="py-3">Sector</th>
+                <th class="py-3">Nivel Escolar</th>
+                <th class="py-3 text-center">Ubicación</th>
+            </tr>
+            </thead>
+            <tbody id="tbodyLocal">
+            </tbody>
+        </table>
+    </div>
+
+    <div class="row align-items-center mb-3">
+        <div class="col-md-12">
+            <h4 class="fw-bold"> Encuestas Sincronizadas</h4>
+        </div>
+    </div>
+</div>
+
+<div class="table-responsive mb-5">
+    <table class="table table-hover shadow-sm" id="tablaServidor">
+        <thead class="table-dark">
+        <tr>
+            <th class="py-3 ps-4">Foto</th>
+            <th class="py-3">Nombre</th>
+            <th class="py-3">Sector</th>
+            <th class="py-3">Nivel Escolar</th>
+            <th class="py-3 text-center">Ubicación</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="e : ${encuestas}" th:attr="data-id=${e.id}" class="encuesta-row">
+            <td class="ps-4">
+                <img th:if="${e.fotoBase64 != null}" th:src="${e.fotoBase64}" class="img-miniatura shadow-sm">
+                <span th:if="${e.fotoBase64 == null}" class="text-muted small">Sin foto</span>
+            </td>
+            <td th:text="${e.nombre}" class="fw-bold"></td>
+            <td th:text="${e.sector}"></td>
+            <td th:text="${e.nivelEscolar}"></td>
+            <td class="text-center">
+                <span class="badge bg-info text-dark"
+                      th:text="${e.ubicacion != null} ? ${e.ubicacion.latitud + ', ' + e.ubicacion.longitud} : 'Sin GPS'"></span>
+            </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(encuestas)}">
+            <td colspan="5" class="text-center py-4 text-muted">No hay encuestas registradas</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
 
 <script>
     if ('serviceWorker' in navigator) {
@@ -79,25 +111,87 @@
 <script type="module">
     import { getEncuestasPendientes, clearEncuestaSincronizada } from '/js/storage.js';
 
-    const rows = document.querySelectorAll('.encuesta-row');
     const btnCrear = document.getElementById('btnCrear');
     const btnEditar = document.getElementById('btnEditar');
     const btnEliminar = document.getElementById('btnEliminar');
+    const btnSync = document.getElementById('btnSync');
+    const badgeSync = document.getElementById('badgeSync');
 
-    rows.forEach(row => {
+    const contenedorLocal = document.getElementById('contenedorLocal');
+    const tbodyLocal = document.getElementById('tbodyLocal');
+
+    let idSeleccionado = null;
+    let tipoSeleccionado = null;
+
+    function limpiarSelecciones() {
+        document.querySelectorAll('tbody tr').forEach(r => r.classList.remove('selected'));
+        btnEditar.classList.add('disabled');
+        btnEliminar.classList.add('disabled');
+        idSeleccionado = null;
+        tipoSeleccionado = null;
+    }
+
+    document.querySelectorAll('#tablaServidor .encuesta-row').forEach(row => {
         row.addEventListener('click', () => {
-            rows.forEach(r => r.classList.remove('selected'));
+            limpiarSelecciones();
             row.classList.add('selected');
-
-            const id = row.getAttribute('data-id');
-
+            idSeleccionado = row.getAttribute('data-id');
+            tipoSeleccionado = 'servidor';
             btnEditar.classList.remove('disabled');
-            btnEditar.dataset.target = `/encuestador/encuesta/editar/${id}`;
-
             btnEliminar.classList.remove('disabled');
-            btnEliminar.dataset.target = `/encuestador/encuesta/eliminar/${id}`;
         });
     });
+
+    async function cargarTablaLocal() {
+        try {
+            const pendientes = await getEncuestasPendientes();
+
+            if (btnSync && pendientes.length > 0) {
+                btnSync.classList.remove('d-none');
+                btnSync.classList.add('d-inline-flex');
+                badgeSync.innerText = pendientes.length;
+
+                contenedorLocal.classList.remove('d-none');
+                tbodyLocal.innerHTML = '';
+
+                pendientes.forEach(e => {
+                    const tr = document.createElement('tr');
+                    tr.style.cursor = 'pointer';
+
+                    const fotoHtml = e.fotoBase64 ? `<img src="${e.fotoBase64}" class="img-miniatura shadow-sm">` : `<span class="text-muted small">Sin foto</span>`;
+                    const ubiHtml = e.ubicacion ? `<span class="badge bg-warning text-dark">${e.ubicacion.latitud}, ${e.ubicacion.longitud}</span>` : `<span class="badge bg-secondary">Sin GPS</span>`;
+
+                    tr.innerHTML = `
+                        <td class="ps-4">${fotoHtml}</td>
+                        <td class="fw-bold">${e.nombre}</td>
+                        <td>${e.sector}</td>
+                        <td>${e.nivelEscolar}</td>
+                        <td class="text-center">${ubiHtml}</td>
+                    `;
+
+                    tr.addEventListener('click', () => {
+                        limpiarSelecciones();
+                        tr.classList.add('selected');
+                        idSeleccionado = e.localId;
+                        tipoSeleccionado = 'local';
+                        btnEditar.classList.remove('disabled');
+                        btnEliminar.classList.remove('disabled');
+                    });
+
+                    tbodyLocal.appendChild(tr);
+                });
+
+            } else {
+                if(btnSync) {
+                    btnSync.classList.add('d-none');
+                    btnSync.classList.remove('d-inline-flex');
+                }
+                contenedorLocal.classList.add('d-none');
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
 
     btnCrear.addEventListener('click', (e) => {
         e.preventDefault();
@@ -106,46 +200,34 @@
 
     btnEditar.addEventListener('click', (e) => {
         e.preventDefault();
-        if (!btnEditar.classList.contains('disabled') && btnEditar.dataset.target) {
-            window.location.href = btnEditar.dataset.target;
+        if (btnEditar.classList.contains('disabled')) return;
+
+        if (tipoSeleccionado === 'servidor') {
+            window.location.href = `/encuestador/encuesta/editar/${idSeleccionado}`;
+        } else if (tipoSeleccionado === 'local') {
+            window.location.href = `/encuestador/encuesta/crear?localId=${idSeleccionado}`;
         }
     });
 
-    btnEliminar.addEventListener('click', (e) => {
+    btnEliminar.addEventListener('click', async (e) => {
         e.preventDefault();
-        if (!btnEliminar.classList.contains('disabled') && btnEliminar.dataset.target) {
-            if (confirm('¿Seguro que deseas eliminar esta encuesta?')) {
-                window.location.href = btnEliminar.dataset.target;
+        if (btnEliminar.classList.contains('disabled')) return;
+
+        if (confirm('¿Seguro que deseas eliminar esta encuesta?')) {
+            if (tipoSeleccionado === 'servidor') {
+                window.location.href = `/encuestador/encuesta/eliminar/${idSeleccionado}`;
+            } else if (tipoSeleccionado === 'local') {
+                await clearEncuestaSincronizada(idSeleccionado);
+                limpiarSelecciones();
+                cargarTablaLocal();
             }
         }
     });
-
-    const btnSync = document.getElementById('btnSync');
-    const badgeSync = document.getElementById('badgeSync');
-
-    async function revisarPendientes() {
-        try {
-            const pendientes = await getEncuestasPendientes();
-            if (btnSync && pendientes.length > 0) {
-                btnSync.classList.remove('d-none');
-                btnSync.classList.add('d-inline-flex');
-                badgeSync.innerText = pendientes.length;
-            } else if (btnSync) {
-                btnSync.classList.add('d-none');
-                btnSync.classList.remove('d-inline-flex');
-            }
-        } catch (err) {
-            console.error("Error leyendo IndexedDB:", err);
-        }
-    }
-
-    revisarPendientes();
 
     btnSync.addEventListener('click', async (e) => {
         e.preventDefault();
-
         if (!navigator.onLine) {
-            alert("No tienes conexión a internet en este momento. Conéctate a un Wi-Fi o enciende los datos para sincronizar.");
+            alert("No tienes conexión a internet en este momento.");
             return;
         }
 
@@ -167,27 +249,24 @@
                 if (response.ok) {
                     await clearEncuestaSincronizada(encuesta.localId);
                     sincronizadas++;
-                } else {
-                    console.error("Falló la encuesta con localId:", encuesta.localId);
                 }
             }
 
             if (sincronizadas > 0) {
-                alert(`Se han sincronizado ${sincronizadas} de ${pendientes.length} encuestas.`);
+                alert(`Se han sincronizado ${sincronizadas} encuestas.`);
                 window.location.reload();
             } else {
-                alert("No se pudo sincronizar ninguna encuesta. Verifica tu conexión.");
-                btnSync.innerHTML = contenidoOriginal;
-                btnSync.disabled = false;
+                alert("Fallo al sincronizar. Verifica tu conexión.");
             }
-
         } catch (error) {
-            console.error("Error durante la sincronización:", error);
             alert("Error de red al intentar sincronizar.");
+        } finally {
             btnSync.innerHTML = contenidoOriginal;
             btnSync.disabled = false;
         }
     });
+
+    cargarTablaLocal();
 </script>
 
 </body>
