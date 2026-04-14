@@ -1,53 +1,73 @@
-<div th:fragment="menu" class="mb-4">
-  <div class="col-12 d-flex justify-content-end align-items-center gap-2">
-    <div class="d-flex justify-content-end align-items-center gap-2">
-      <a href="/usuarios" class="btn btn-secondary position-relative text-white fw-bold">
-        Usuarios </a>
-      <a href="/encuesta" class="btn btn-secondary text-white fw-bold d-inline-flex align-items-center gap-2">
-        <span>Encuestas</span>
-      </a>
-      <a href="/encuesta/mapa" class="btn btn-secondary text-white fw-bold d-inline-flex align-items-center gap-2">
-        <span>Mapa</span>
-      </a>
-      <a href="/api/rest" class="btn btn-dark d-inline-flex align-items-center gap-2 shadow-sm">
-        <i class="bi bi-cpu"></i> Cliente REST
-      </a>
-      <a href="/cliente-grpc" class="btn btn-dark d-inline-flex align-items-center gap-2 shadow-sm">
-        <i class="bi bi-cpu"></i> Cliente gRPC
-      </a>
+<nav th:fragment="menu" class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm mb-4 rounded px-3">
+  <div class="container-fluid">
+    <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="/encuesta">
+      <i class="bi bi-clipboard-data-fill text-primary"></i>
+      <span class="d-none d-sm-inline">Encuestas App</span>
+    </a>
+
+    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navRespon"
+            aria-controls="navRespon" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navRespon">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0 gap-1 gap-lg-2 mt-3 mt-lg-0">
+        <li class="nav-item">
+          <a href="/usuarios" class="nav-link btn btn-outline-secondary text-white border-0 fw-bold px-3 text-start">
+            <i class="bi bi-people"></i> Usuarios
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="/encuesta" class="nav-link btn btn-outline-secondary text-white border-0 fw-bold px-3 text-start">
+            <i class="bi bi-list-task"></i> Encuestas
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="/encuesta/mapa" class="nav-link btn btn-outline-secondary text-white border-0 fw-bold px-3 text-start">
+            <i class="bi bi-geo-alt"></i> Mapa
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="/api/rest" class="nav-link btn btn-outline-info text-white border-0 fw-bold px-3 text-start">
+            <i class="bi bi-hdd-network"></i> Cliente REST
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="/cliente-grpc" class="nav-link btn btn-outline-info text-white border-0 fw-bold px-3 text-start">
+            <i class="bi bi-cpu"></i> Cliente gRPC
+          </a>
+        </li>
+      </ul>
+
+      <div class="d-flex flex-column flex-lg-row align-items-lg-center gap-3 pt-3 pt-lg-0 border-top border-secondary border-lg-0">
+        <div th:if="${nombre == null}">
+          <a href="/login" class="btn btn-primary w-100 fw-bold px-4">
+            <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
+          </a>
+        </div>
+
+        <div th:if="${nombre != null}" class="d-flex align-items-center justify-content-between gap-3 bg-dark p-2 rounded">
+          <div class="d-flex align-items-center gap-2">
+            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+              <span class="text-white small fw-bold" th:text="${#strings.substring(nombre,0,1).toUpperCase()}">U</span>
+            </div>
+            <span class="text-light small fw-bold" th:text="${nombre}">Usuario</span>
+          </div>
+          <a href="/logout" class="btn btn-sm btn-outline-danger border-0">
+            <i class="bi bi-power h5 mb-0"></i>
+          </a>
+        </div>
+      </div>
     </div>
-
-    <div th:if="${nombre == null}">
-      <a href="/login" class="btn btn-primary text-white fw-bold">
-        Iniciar Sesión
-      </a>
-    </div>
-
-    <div th:if="${nombre != null}"
-         class="d-flex align-items-center gap-2">
-
-          <span class="text-muted small"
-                th:text="${'Hola, ' + nombre}">
-          </span>
-
-      <a href="/logout" class="btn btn-outline-danger fw-bold">
-        Cerrar Sesión
-      </a>
-    </div>
-
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/serviceworker.js', { scope: '/' })
-                  .then(registration => {
-                    console.log('Service Worker registrado con éxito:', registration.scope);
-                  })
-                  .catch(error => {
-                    console.log('Fallo en el registro del Service Worker:', error);
-                  });
-        });
-      }
-    </script>
   </div>
-</div>
 
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/serviceworker.js', { scope: '/' })
+                .then(reg => console.log('Service Worker activo:', reg.scope))
+                .catch(err => console.log('Error SW:', err));
+      });
+    }
+  </script>
+</nav>

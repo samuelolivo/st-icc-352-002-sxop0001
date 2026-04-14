@@ -2,80 +2,83 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <title>Encuestas</title>
     <style>
         body { background-color: #f8f9fa; }
+
+        /* Estilos de Selección para Tabla Local */
         #tbodyLocal tr.selected {
-            background-color: rgba(13, 110, 253, 0.1);
+            background-color: rgba(13, 110, 253, 0.08) !important;
             border-left: 5px solid #0d6efd;
         }
-        #tbodyLocal tr { cursor: pointer; transition: all 0.2s; }
-        #tablaServidor tr { cursor: default; }
-
-        .table { background: white; border-radius: 8px; overflow: hidden; }
-        .img-miniatura { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; }
-        .gap-2 { gap: 0.5rem !important; }
+        #tbodyLocal tr { cursor: pointer; transition: background 0.2s; }
+        .table { background: white; border-radius: 12px; overflow: hidden; }
+        .img-miniatura { width: 48px; height: 48px; object-fit: cover; border-radius: 8px; border: 1px solid #dee2e6; }
+        @media (max-width: 768px) {
+            .hide-mobile { display: none; }
+            .h2-responsive { font-size: 1.5rem; }
+            .badge-gps { font-size: 0.7rem; }
+        }
     </style>
 </head>
-<body class="container mt-5">
+<body class="container py-3 py-md-5">
 
 <div th:replace="~{templates/menu.html :: menu}"></div>
 
-<div class="row align-items-center mb-4">
-    <div class="col-md-6">
-        <h2 class="fw-bold text-dark">Listado de Encuestas</h2>
+<div class="row align-items-center mb-4 g-3">
+    <div class="col-12 col-md-6 text-center text-md-start">
+        <h2 class="fw-bold text-dark h2-responsive">Listado de Encuestas</h2>
     </div>
 </div>
 
-<div th:if="${rol != null and (rol == 'ADMIN' or rol == 'ENCUESTADOR')}">
+<div th:if="${rol != null and (rol == 'ADMIN' or rol == 'ENCUESTADOR')}" class="mb-4">
     <div th:replace="~{templates/botonesCrud.html :: botonesCrud(false, true, false, false)}"></div>
 </div>
 
 <div id="contenedorLocal" class="d-none">
-    <div class="row align-items-center mb-3">
-        <div class="col-md-12">
-            <h4 class="fw-bold text-warning"><i class="bi bi-wifi-off"></i> Pendientes de Sincronizar</h4>
-        </div>
+    <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center mb-3">
+        <i class="bi bi-wifi-off fs-4 me-2"></i>
+        <h5 class="fw-bold mb-0 text-dark">Pendientes de Sincronizar</h5>
     </div>
 
-    <div th:if="${rol != null and (rol == 'ADMIN' or rol == 'ENCUESTADOR')}">
+    <div th:if="${rol != null and (rol == 'ADMIN' or rol == 'ENCUESTADOR')}" class="mb-3">
         <div th:replace="~{templates/botonesCrud.html :: botonesCrud(true, false, true, true)}"></div>
     </div>
 
-    <div class="table-responsive mb-5">
-        <table class="table table-hover shadow-sm">
-            <thead class="table-warning">
+    <div class="table-responsive shadow-sm mb-5 rounded-3">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-warning small text-uppercase fw-bold">
             <tr>
                 <th class="py-3 ps-4">Foto</th>
-                <th class="py-3">Nombre</th>
-                <th class="py-3">Sector</th>
-                <th class="py-3">Nivel Escolar</th>
-                <th class="py-3 text-center">Ubicación</th>
+                <th>Nombre</th>
+                <th class="hide-mobile">Sector</th>
+                <th class="hide-mobile">Nivel</th>
+                <th class="text-center">Ubicación</th>
             </tr>
             </thead>
-            <tbody id="tbodyLocal">
-            </tbody>
+            <tbody id="tbodyLocal"></tbody>
         </table>
     </div>
 
-    <div class="row align-items-center mb-3">
-        <div class="col-md-12">
-            <h4 class="fw-bold"> Encuestas Sincronizadas</h4>
-        </div>
+    <div class="d-flex align-items-center mb-3">
+        <hr class="flex-grow-1">
+        <span class="mx-3 text-muted fw-bold small text-uppercase">Datos Sincronizados</span>
+        <hr class="flex-grow-1">
     </div>
 </div>
 
-<div class="table-responsive mb-5">
-    <table class="table table-hover shadow-sm" id="tablaServidor">
-        <thead class="table-dark">
+<div class="table-responsive shadow-sm rounded-3">
+    <table class="table table-hover align-middle mb-0" id="tablaServidor">
+        <thead class="table-dark small text-uppercase fw-bold">
         <tr>
             <th class="py-3 ps-4">Foto</th>
-            <th class="py-3">Nombre</th>
-            <th class="py-3">Sector</th>
-            <th class="py-3">Nivel Escolar</th>
-            <th class="py-3 text-center">Ubicación</th>
+            <th>Nombre</th>
+            <th class="hide-mobile">Sector</th>
+            <th class="hide-mobile">Nivel Escolar</th>
+            <th class="text-center">Ubicación</th>
         </tr>
         </thead>
         <tbody>
@@ -84,22 +87,34 @@
                 <img th:if="${e.fotoBase64 != null}"
                      th:src="${#strings.startsWith(e.fotoBase64, 'data:') ? e.fotoBase64 : 'data:image/jpeg;base64,' + e.fotoBase64}"
                      class="img-miniatura shadow-sm">
-                <span th:if="${e.fotoBase64 == null}" class="text-muted small">Sin foto</span>
+                <div th:if="${e.fotoBase64 == null}" class="bg-light img-miniatura d-flex align-items-center justify-content-center">
+                    <i class="bi bi-image text-muted"></i>
+                </div>
             </td>
-            <td th:text="${e.nombre}" class="fw-bold"></td>
-            <td th:text="${e.sector}"></td>
-            <td th:text="${e.nivelEscolar}"></td>
+            <td>
+                <span th:text="${e.nombre}" class="fw-bold text-dark d-block"></span>
+                <span th:text="${e.sector}" class="d-md-none text-muted small"></span>
+            </td>
+            <td th:text="${e.sector}" class="hide-mobile"></td>
+            <td th:text="${e.nivelEscolar}" class="hide-mobile"></td>
             <td class="text-center">
-                <span class="badge bg-info text-dark"
-                      th:text="${e.ubicacion != null} ? ${e.ubicacion.latitud + ', ' + e.ubicacion.longitud} : 'Sin GPS'"></span>
+                <span th:if="${e.ubicacion != null}" class="badge bg-info text-dark rounded-pill badge-gps">
+                    <i class="bi bi-geo-alt-fill"></i> <span th:text="${e.ubicacion.latitud + ', ' + e.ubicacion.longitud}" class="hide-mobile"></span>
+                </span>
+                <span th:if="${e.ubicacion == null}" class="badge bg-light text-muted rounded-pill">N/A</span>
             </td>
         </tr>
         <tr th:if="${#lists.isEmpty(encuestas)}">
-            <td colspan="5" class="text-center py-4 text-muted">No hay encuestas registradas</td>
+            <td colspan="5" class="text-center py-5 text-muted">
+                <i class="bi bi-cloud-slash fs-1 d-block mb-2"></i>
+                No hay encuestas en el servidor
+            </td>
         </tr>
         </tbody>
     </table>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
     if ('serviceWorker' in navigator) {
