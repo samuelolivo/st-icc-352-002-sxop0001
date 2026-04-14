@@ -34,7 +34,7 @@
 </div>
 
 <div th:if="${rol != null and rol == 'ADMIN'}">
-    <div th:replace="~{templates/botonesCrud.html :: botonesCrud(false)}"></div>
+    <div th:replace="~{templates/botonesCrud.html :: botonesCrud(false, true, true, true)}"></div>
 </div>
 
 <div class="table-responsive">

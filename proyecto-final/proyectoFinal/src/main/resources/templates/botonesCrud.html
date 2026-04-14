@@ -1,4 +1,4 @@
-<div th:fragment="botonesCrud(mostrarSync)" class="row mb-4">
+<div th:fragment="botonesCrud(mostrarSync, mostrarCrear, mostrarEditar, mostrarEliminar)" class="row mb-4">
   <div class="col-12">
     <div class="d-flex justify-content-center align-items-center gap-2">
 
@@ -8,17 +8,20 @@
         <span>Sincronizar (<span id="badgeSync">0</span>)</span>
       </button>
 
-      <a href="#" id="btnCrear" class="btn btn-success text-white fw-bold d-inline-flex align-items-center gap-2 shadow-sm">
+      <a href="#" id="btnCrear" th:if="${mostrarCrear}"
+         class="btn btn-success text-white fw-bold d-inline-flex align-items-center gap-2 shadow-sm">
         <i class="bi bi-plus"></i>
         <span>Crear</span>
       </a>
 
-      <a href="#" id="btnEditar" class="btn btn-warning text-dark fw-bold d-inline-flex align-items-center gap-2 disabled shadow-sm">
+      <a href="#" id="btnEditar" th:if="${mostrarEditar}"
+         class="btn btn-warning text-dark fw-bold d-inline-flex align-items-center gap-2 disabled shadow-sm">
         <i class="bi bi-pencil"></i>
         <span>Editar</span>
       </a>
 
-      <a href="#" id="btnEliminar" class="btn btn-danger text-white fw-bold d-inline-flex align-items-center gap-2 disabled shadow-sm">
+      <a href="#" id="btnEliminar" th:if="${mostrarEliminar}"
+         class="btn btn-danger text-white fw-bold d-inline-flex align-items-center gap-2 disabled shadow-sm">
         <i class="bi bi-trash"></i>
         <span>Eliminar</span>
       </a>

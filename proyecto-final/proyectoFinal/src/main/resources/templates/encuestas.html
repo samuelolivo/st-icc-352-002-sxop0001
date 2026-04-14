@@ -7,12 +7,13 @@
     <title>Encuestas</title>
     <style>
         body { background-color: #f8f9fa; }
-        .table-hover tbody tr.selected {
+        #tbodyLocal tr.selected {
             background-color: rgba(13, 110, 253, 0.1);
-            cursor: pointer;
             border-left: 5px solid #0d6efd;
         }
-        tr { cursor: pointer; transition: all 0.2s; }
+        #tbodyLocal tr { cursor: pointer; transition: all 0.2s; }
+        #tablaServidor tr { cursor: default; }
+
         .table { background: white; border-radius: 8px; overflow: hidden; }
         .img-miniatura { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; }
         .gap-2 { gap: 0.5rem !important; }
@@ -29,7 +30,7 @@
 </div>
 
 <div th:if="${rol != null and (rol == 'ADMIN' or rol == 'ENCUESTADOR')}">
-    <div th:replace="~{templates/botonesCrud.html :: botonesCrud(true)}"></div>
+    <div th:replace="~{templates/botonesCrud.html :: botonesCrud(false, true, false, false)}"></div>
 </div>
 
 <div id="contenedorLocal" class="d-none">
@@ -37,6 +38,10 @@
         <div class="col-md-12">
             <h4 class="fw-bold text-warning"><i class="bi bi-wifi-off"></i> Pendientes de Sincronizar</h4>
         </div>
+    </div>
+
+    <div th:if="${rol != null and (rol == 'ADMIN' or rol == 'ENCUESTADOR')}">
+        <div th:replace="~{templates/botonesCrud.html :: botonesCrud(true, false, true, true)}"></div>
     </div>
 
     <div class="table-responsive mb-5">
@@ -126,23 +131,13 @@
     let tipoSeleccionado = null;
 
     function limpiarSelecciones() {
-        document.querySelectorAll('tbody tr').forEach(r => r.classList.remove('selected'));
-        btnEditar.classList.add('disabled');
-        btnEliminar.classList.add('disabled');
+        // Solo limpiamos las filas de la tabla local
+        document.querySelectorAll('#tbodyLocal tr').forEach(r => r.classList.remove('selected'));
+        if(btnEditar) btnEditar.classList.add('disabled');
+        if(btnEliminar) btnEliminar.classList.add('disabled');
         idSeleccionado = null;
         tipoSeleccionado = null;
     }
-
-    document.querySelectorAll('#tablaServidor .encuesta-row').forEach(row => {
-        row.addEventListener('click', () => {
-            limpiarSelecciones();
-            row.classList.add('selected');
-            idSeleccionado = row.getAttribute('data-id');
-            tipoSeleccionado = 'servidor';
-            btnEditar.classList.remove('disabled');
-            btnEliminar.classList.remove('disabled');
-        });
-    });
 
     async function cargarTablaLocal() {
         try {
@@ -158,7 +153,6 @@
 
                 pendientes.forEach(e => {
                     const tr = document.createElement('tr');
-                    tr.style.cursor = 'pointer';
 
                     const fotoHtml = e.fotoBase64 ? `<img src="${e.fotoBase64}" class="img-miniatura shadow-sm">` : `<span class="text-muted small">Sin foto</span>`;
                     const ubiHtml = e.ubicacion ? `<span class="badge bg-warning text-dark">${e.ubicacion.latitud}, ${e.ubicacion.longitud}</span>` : `<span class="badge bg-secondary">Sin GPS</span>`;
@@ -176,8 +170,8 @@
                         tr.classList.add('selected');
                         idSeleccionado = e.localId;
                         tipoSeleccionado = 'local';
-                        btnEditar.classList.remove('disabled');
-                        btnEliminar.classList.remove('disabled');
+                        if(btnEditar) btnEditar.classList.remove('disabled');
+                        if(btnEliminar) btnEliminar.classList.remove('disabled');
                     });
 
                     tbodyLocal.appendChild(tr);
@@ -195,78 +189,83 @@
         }
     }
 
-    btnCrear.addEventListener('click', (e) => {
-        e.preventDefault();
-        window.location.href = "/encuestador/encuesta/crear";
-    });
+    if(btnCrear) {
+        btnCrear.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.location.href = "/encuestador/encuesta/crear";
+        });
+    }
 
-    btnEditar.addEventListener('click', (e) => {
-        e.preventDefault();
-        if (btnEditar.classList.contains('disabled')) return;
+    if(btnEditar) {
+        btnEditar.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (btnEditar.classList.contains('disabled')) return;
 
-        if (tipoSeleccionado === 'servidor') {
-            window.location.href = `/encuestador/encuesta/editar/${idSeleccionado}`;
-        } else if (tipoSeleccionado === 'local') {
-            window.location.href = `/encuestador/encuesta/crear?localId=${idSeleccionado}`;
-        }
-    });
-
-    btnEliminar.addEventListener('click', async (e) => {
-        e.preventDefault();
-        if (btnEliminar.classList.contains('disabled')) return;
-
-        if (confirm('¿Seguro que deseas eliminar esta encuesta?')) {
-            if (tipoSeleccionado === 'servidor') {
-                window.location.href = `/encuestador/encuesta/eliminar/${idSeleccionado}`;
-            } else if (tipoSeleccionado === 'local') {
-                await clearEncuestaSincronizada(idSeleccionado);
-                limpiarSelecciones();
-                cargarTablaLocal();
+            // Solo procesamos si es local (por seguridad)
+            if (tipoSeleccionado === 'local') {
+                window.location.href = `/encuestador/encuesta/crear?localId=${idSeleccionado}`;
             }
-        }
-    });
+        });
+    }
 
-    btnSync.addEventListener('click', async (e) => {
-        e.preventDefault();
-        if (!navigator.onLine) {
-            alert("No tienes conexión a internet en este momento.");
-            return;
-        }
+    if(btnEliminar) {
+        btnEliminar.addEventListener('click', async (e) => {
+            e.preventDefault();
+            if (btnEliminar.classList.contains('disabled')) return;
 
-        const contenidoOriginal = btnSync.innerHTML;
-        btnSync.disabled = true;
-        btnSync.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Subiendo...';
-
-        try {
-            const pendientes = await getEncuestasPendientes();
-            let sincronizadas = 0;
-
-            for (const encuesta of pendientes) {
-                const response = await fetch('/encuestador/encuesta/sincronizar', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(encuesta)
-                });
-
-                if (response.ok) {
-                    await clearEncuestaSincronizada(encuesta.localId);
-                    sincronizadas++;
+            if (confirm('¿Seguro que deseas eliminar esta encuesta pendiente?')) {
+                if (tipoSeleccionado === 'local') {
+                    await clearEncuestaSincronizada(idSeleccionado);
+                    limpiarSelecciones();
+                    cargarTablaLocal();
                 }
             }
+        });
+    }
 
-            if (sincronizadas > 0) {
-                alert(`Se han sincronizado ${sincronizadas} encuestas.`);
-                window.location.reload();
-            } else {
-                alert("Fallo al sincronizar. Verifica tu conexión.");
+    if(btnSync) {
+        btnSync.addEventListener('click', async (e) => {
+            e.preventDefault();
+            if (!navigator.onLine) {
+                alert("No tienes conexión a internet en este momento.");
+                return;
             }
-        } catch (error) {
-            alert("Error de red al intentar sincronizar.");
-        } finally {
-            btnSync.innerHTML = contenidoOriginal;
-            btnSync.disabled = false;
-        }
-    });
+
+            const contenidoOriginal = btnSync.innerHTML;
+            btnSync.disabled = true;
+            btnSync.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Subiendo...';
+
+            try {
+                const pendientes = await getEncuestasPendientes();
+                let sincronizadas = 0;
+
+                for (const encuesta of pendientes) {
+                    const response = await fetch('/encuestador/encuesta/sincronizar', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(encuesta)
+                    });
+
+                    if (response.ok) {
+                        await clearEncuestaSincronizada(encuesta.localId);
+                        sincronizadas++;
+                    }
+                }
+
+                if (sincronizadas > 0) {
+                    alert(`Se han sincronizado ${sincronizadas} encuestas.`);
+                    window.location.reload();
+                } else {
+                    alert("Fallo al sincronizar. Verifica tu conexión.");
+                }
+            } catch (error) {
+                alert("Error de red al intentar sincronizar.");
+            } finally {
+                btnSync.innerHTML = contenidoOriginal;
+                btnSync.disabled = false;
+            }
+        });
+    }
 
     cargarTablaLocal();
 </script>
