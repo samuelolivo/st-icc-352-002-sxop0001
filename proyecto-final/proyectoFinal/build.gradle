@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'application'
+    id 'com.google.protobuf' version '0.9.4'
 }
 
 application {
@@ -24,6 +25,9 @@ dependencies {
     implementation 'dev.morphia.morphia:morphia-core:2.4.14'
     implementation 'org.mongodb:mongodb-driver-sync:4.11.1'
 
+    implementation 'io.grpc:grpc-netty-shaded:1.62.2'
+    implementation 'io.grpc:grpc-protobuf:1.62.2'
+    implementation 'io.grpc:grpc-stub:1.62.2'
 
     implementation("com.fasterxml.jackson.core:jackson-databind:2.17.0")
     implementation 'org.jasypt:jasypt:1.9.3'
@@ -32,11 +36,32 @@ dependencies {
 
     testImplementation platform('org.junit:junit-bom:5.10.2')
     testImplementation 'org.junit.jupiter:junit-jupiter'
+
+    compileOnly 'org.apache.tomcat:annotations-api:6.0.53'
+}
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.25.1"
+    }
+    plugins {
+        grpc {
+            artifact = "io.grpc:protoc-gen-grpc-java:1.62.2"
+        }
+    }
+    generateProtoTasks {
+        all().each { task ->
+            task.plugins {
+                grpc {}
+            }
+        }
+    }
 }
 
 test {
     useJUnitPlatform()
 }
+
 
 jar {
     manifest {
@@ -49,3 +74,5 @@ jar {
     }
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
+
+
