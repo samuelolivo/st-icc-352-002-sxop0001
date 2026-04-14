@@ -21,7 +21,13 @@
 </head>
 <body class="container py-4">
 
-<div th:replace="~{templates/menu.html :: menu}"></div>
+<div class="row align-items-left mb-4">
+  <div class="col-md-12">
+    <a href="/" class="btn btn-secondary text-white fw-bold d-inline-flex align-items-center gap-2">
+      Volver
+    </a>
+  </div>
+</div>
 
 <h5 class="mb-4"><i class="bi bi-cpu-fill"></i> Cliente gRPC Avanzado</h5>
 
@@ -57,7 +63,7 @@
           <select id="nivel" class="form-control form-control-sm">
             <option value="BASICO">Básico</option>
             <option value="MEDIO">Medio</option>
-            <option value="UNIVERSITARIO">Grado</option>
+            <option value="UNIVERSITARIO">Universitario</option>
             <option value="POSTGRADO">Postgrado</option>
             <option value="DOCTORADO">Doctorado</option>
           </select>

@@ -52,6 +52,17 @@ public class EncuestaController {
     }
 
     public void vistaMapa(Context ctx) {
+        String jwt = ctx.sessionAttribute(Main.KeySession.JWT.name());
+        String nombre = null;
+
+        if (jwt != null) {
+            DecodedJWT djwt = JWT.decode(jwt);
+            nombre = djwt.getClaim("nombre").asString();
+        }
+
+        Map<String, Object> model = new HashMap<>();
+        model.put("nombre", nombre);
+
         ctx.render("templates/mapaEncuestas.html");
     }
 
@@ -101,6 +112,16 @@ public class EncuestaController {
     }
 
     public void listarEncuestasJson(Context ctx) {
+        String jwt = ctx.sessionAttribute(Main.KeySession.JWT.name());
+        String nombre = null;
+
+        if (jwt != null) {
+            DecodedJWT djwt = JWT.decode(jwt);
+            nombre = djwt.getClaim("nombre").asString();
+        }
+
+        Map<String, Object> model = new HashMap<>();
+        model.put("nombre", nombre);
         List<Encuesta> lista = encuestaService.listarTodasActivas();
         ctx.json(lista);
     }

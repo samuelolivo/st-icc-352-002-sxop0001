@@ -8,8 +8,20 @@
     <style>#map { height: 500px; width: 100%; border-radius: 10px; }</style>
 </head>
 <body class="container mt-5">
-<div th:replace="templates/menu.html :: menu"></div>
-<h2 class="fw-bold text-dark">Mapa de ubicaciones de registro de encuestas</h2>
+
+<div class="row align-items-left mb-4">
+    <div class="col-md-12">
+        <a href="/" class="btn btn-secondary text-white fw-bold d-inline-flex align-items-center gap-2">
+            Volver
+        </a>
+    </div>
+</div>
+
+<div class="row align-items-center mb-4">
+    <div class="col-md-12">
+        <h2 class="fw-bold text-dark">Mapa de ubicaciones de registro de encuestas</h2>
+    </div>
+</div>
 <div id="map" class="shadow"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
