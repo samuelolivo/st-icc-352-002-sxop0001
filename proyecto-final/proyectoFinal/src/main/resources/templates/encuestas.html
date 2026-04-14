@@ -76,7 +76,9 @@
         <tbody>
         <tr th:each="e : ${encuestas}" th:attr="data-id=${e.id}" class="encuesta-row">
             <td class="ps-4">
-                <img th:if="${e.fotoBase64 != null}" th:src="${e.fotoBase64}" class="img-miniatura shadow-sm">
+                <img th:if="${e.fotoBase64 != null}"
+                     th:src="${#strings.startsWith(e.fotoBase64, 'data:') ? e.fotoBase64 : 'data:image/jpeg;base64,' + e.fotoBase64}"
+                     class="img-miniatura shadow-sm">
                 <span th:if="${e.fotoBase64 == null}" class="text-muted small">Sin foto</span>
             </td>
             <td th:text="${e.nombre}" class="fw-bold"></td>

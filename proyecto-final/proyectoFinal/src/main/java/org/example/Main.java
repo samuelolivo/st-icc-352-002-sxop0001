@@ -4,6 +4,7 @@ import io.javalin.Javalin;
 import io.javalin.http.staticfiles.Location;
 import io.javalin.rendering.template.JavalinThymeleaf;
 import org.example.controllers.EncuestaController;
+import org.example.controllers.RestApiController;
 import org.example.controllers.SesionController;
 import org.example.controllers.UsuarioController;
 import org.example.controllers.WebSocketController;
@@ -46,6 +47,7 @@ public class Main {
         EncuestaController encuestaController = new EncuestaController(encuestaService);
         SesionController sesionController = new SesionController(usuarioService);
         WebSocketController webSocketController = new WebSocketController();
+        RestApiController restApiController = new RestApiController(encuestaService, usuarioService);
 
         var app = Javalin.create(config -> {
             config.http.maxRequestSize = 10_000_000L;
@@ -57,7 +59,6 @@ public class Main {
                 staticFiles.precompressMaxSize = -1;
                 staticFiles.headers = Map.of("Service-Worker-Allowed", "/");
             });
-
 
             config.fileRenderer(new JavalinThymeleaf());
             config.routes.before("/**", sesionController::sesion);
@@ -80,7 +81,7 @@ public class Main {
             config.routes.get("/encuesta", encuestaController::vistaListar);
             config.routes.get("/encuesta/mapa", encuestaController::vistaMapa);
             config.routes.get("/encuesta/mapa/puntos", encuestaController::listarEncuestasJson);
-            config.routes.post("/encuestador/encuesta/sincronizar", encuestaController::sincronizarEncuestas);
+            config.routes.post("/encuestador/encuesta/sincronizar", encuestaController::sincronizarEncuesta);
 
             config.routes.get("/usuarios", usuarioController::vistaListar);
             config.routes.get("/admin/usuarios/crear", usuarioController::mostrarFormulario);
@@ -89,6 +90,12 @@ public class Main {
             config.routes.get("/admin/usuarios/eliminar/{id}", usuarioController::eliminar);
 
             config.routes.ws("/ws", webSocketController::configurarRutas);
+
+            config.routes.get("/api/rest", restApiController::rest);
+            config.routes.post("/api/auth/login", restApiController::login);
+            config.routes.before("/api/encuestas", restApiController::validarTokenDelAutenticado);
+            config.routes.get("/api/encuestas", restApiController::listarEncuestasPorUsuario);
+            config.routes.post("/api/encuestas", restApiController::crearEncuesta);
         });
 
         app.start(7070);

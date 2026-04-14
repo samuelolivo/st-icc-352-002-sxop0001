@@ -27,6 +27,17 @@ public class EncuestaController {
 
     public void crearEncuesta(Context ctx) {
         Encuesta nueva = ctx.bodyAsClass(Encuesta.class);
+
+        String jwt = ctx.sessionAttribute(Main.KeySession.JWT.name());
+        String idUsuario = null;
+
+        if (jwt != null) {
+            DecodedJWT djwt = JWT.decode(jwt);
+            idUsuario = djwt.getSubject();
+        }
+
+        nueva.setUsuarioId(idUsuario);
+
         encuestaService.guardar(nueva);
         ctx.status(201).json(nueva);
     }
@@ -85,8 +96,18 @@ public class EncuestaController {
         ctx.json(lista);
     }
 
-    public void sincronizarEncuestas(Context ctx) {
+    public void sincronizarEncuesta(Context ctx) {
         Encuesta encuestaPendiente = ctx.bodyAsClass(Encuesta.class);
+
+        String jwt = ctx.sessionAttribute(Main.KeySession.JWT.name());
+        String idUsuario = null;
+
+        if (jwt != null) {
+            DecodedJWT djwt = JWT.decode(jwt);
+            idUsuario = djwt.getSubject();
+        }
+
+        encuestaPendiente.setUsuarioId(idUsuario);
         encuestaService.guardar(encuestaPendiente);
         ctx.status(200).result("Sincronización exitosa");
     }
