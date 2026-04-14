@@ -2,12 +2,21 @@ package org.example.controllers;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
 import io.javalin.http.Context;
 import org.example.Main;
+import org.example.grpc.EncuestaRequest;
+import org.example.grpc.EncuestaResponse;
+import org.example.grpc.EncuestaServiceGrpc;
 import org.example.models.Encuesta;
+import org.example.models.EstadoSincronizacion;
+import org.example.models.NivelEscolar;
+import org.example.models.Ubicacion;
 import org.example.services.EncuestaService;
 import org.example.utils.JwtUtil;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -112,5 +121,64 @@ public class EncuestaController {
         ctx.status(200).result("Sincronización exitosa");
     }
 
+    public void procesarEncuestaGrpc(Context ctx) {
 
+        Map<String, Object> body = ctx.bodyAsClass(Map.class);
+        String nombre = (String) body.get("nombre");
+        String sector = (String) body.get("sector");
+        String nivelString = (String) body.get("nivelEscolar");
+        String fotoBase64 = (String) body.get("fotoBase64");
+        String usuarioEmail = (String) body.get("usuario");
+
+        Map<String, Object> ubiMap = (Map<String, Object>) body.get("ubicacion");
+        double lat = Double.parseDouble(ubiMap.get("latitud").toString());
+        double lon = Double.parseDouble(ubiMap.get("longitud").toString());
+
+
+        ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", 50051)
+                .usePlaintext()
+                .build();
+
+        try {
+            EncuestaServiceGrpc.EncuestaServiceBlockingStub stub = EncuestaServiceGrpc.newBlockingStub(channel);
+
+            EncuestaRequest request = EncuestaRequest.newBuilder()
+                    .setNombre(nombre)
+                    .setSector(sector)
+                    .setNivelEscolar(nivelString)
+                    .build();
+
+            EncuestaResponse response = stub.sincronizar(request);
+
+            Encuesta nuevaEncuesta = new Encuesta();
+            nuevaEncuesta.setNombre(nombre);
+            nuevaEncuesta.setSector(sector);
+
+
+            nuevaEncuesta.setNivelEscolar(NivelEscolar.valueOf(nivelString.toUpperCase()));
+
+
+            nuevaEncuesta.setUbicacion(new Ubicacion(lat, lon));
+
+            nuevaEncuesta.setFotoBase64(fotoBase64);
+            nuevaEncuesta.setUsuarioId(usuarioEmail);
+            nuevaEncuesta.setEstadoSync(EstadoSincronizacion.SINCRONIZADO);
+            nuevaEncuesta.setEstadoObjeto(true);
+            nuevaEncuesta.setFechaCreacion(LocalDateTime.now());
+            nuevaEncuesta.setFechaSincronizacion(LocalDateTime.now());
+
+            encuestaService.guardar(nuevaEncuesta);
+
+            ctx.status(200).json(Map.of(
+                    "status", "success",
+                    "mensaje", "Respuesta gRPC: " + response.getMensaje()
+            ));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            ctx.status(500).json(Map.of("status", "error", "mensaje", e.getMessage()));
+        } finally {
+            channel.shutdown();
+        }
+    }
 }

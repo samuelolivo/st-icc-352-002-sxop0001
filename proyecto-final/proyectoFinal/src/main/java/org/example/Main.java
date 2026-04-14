@@ -96,6 +96,8 @@ public class Main {
             config.routes.before("/api/encuestas", restApiController::validarTokenDelAutenticado);
             config.routes.get("/api/encuestas", restApiController::listarEncuestasPorUsuario);
             config.routes.post("/api/encuestas", restApiController::crearEncuesta);
+            config.routes.get("/cliente-grpc", ctx -> ctx.render("templates/clienteGrpc.html"));
+            config.routes.post("/api/grpc/procesar", encuestaController::procesarEncuestaGrpc);
         });
 
         app.start(7070);

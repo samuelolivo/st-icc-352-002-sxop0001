@@ -15,7 +15,7 @@ public class EncuestaServiceImpl extends EncuestaServiceImplBase {
 
 
         EncuestaResponse response = EncuestaResponse.newBuilder()
-                .setMensaje("ENCUESTA DE" + nombre + " RECIBIDA")
+                .setMensaje("ENCUESTA DE " + nombre + " RECIBIDA")
                 .build();
 
         responseObserver.onNext(response);

@@ -26,6 +26,10 @@
     <div class="col-md-6">
         <h2 class="fw-bold text-dark">Listado de Encuestas</h2>
     </div>
+    <div class="col-md-6 d-flex justify-content-end">
+        <a href="/cliente-grpc" class="btn btn-dark d-inline-flex align-items-center gap-2 shadow-sm">
+            <i class="bi bi-cpu"></i> Abrir Cliente gRPC
+        </a>
 </div>
 
 <div th:if="${rol != null and (rol == 'ADMIN' or rol == 'ENCUESTADOR')}">
