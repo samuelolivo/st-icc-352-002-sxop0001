@@ -1,5 +1,8 @@
 # ETAPA 1: Build
 FROM eclipse-temurin:25-jdk-alpine AS builder
+
+RUN apk add --no-cache gcompat libstdc++
+
 WORKDIR /app
 COPY . .
 RUN chmod +x gradlew
