@@ -8,6 +8,7 @@ import org.example.controllers.RestApiController;
 import org.example.controllers.SesionController;
 import org.example.controllers.UsuarioController;
 import org.example.controllers.WebSocketController;
+import org.example.grpc.ServidorGrpc;
 import org.example.models.RolUsuario;
 import org.example.models.Usuario;
 import org.example.repository.EncuestaRepository;
@@ -99,6 +100,19 @@ public class Main {
             config.routes.get("/cliente-grpc", ctx -> ctx.render("templates/clienteGrpc.html"));
             config.routes.post("/api/grpc/procesar", encuestaController::procesarEncuestaGrpc);
         });
+
+        Thread grpcThread = new Thread(() -> {
+            try {
+                System.out.println("Iniciando servidor gRPC en segundo plano...");
+                ServidorGrpc.main(new String[]{});
+            } catch (Exception e) {
+                System.err.println("ERROR CRÍTICO EN gRPC:");
+                e.printStackTrace();
+            }
+        });
+
+        grpcThread.setDaemon(true);
+        grpcThread.start();
 
         app.start(7070);
     }

@@ -10,7 +10,7 @@ public class ServidorGrpc {
                 .addService(new EncuestaServiceImpl())
                 .build();
 
-        System.out.println("Servidor gRPC iniciado en el puerto 50051...");
+        System.out.println("Servidor gRPC iniciado en el puerto 50051");
         server.start();
         server.awaitTermination();
     }
