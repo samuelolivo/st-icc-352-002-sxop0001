@@ -2,47 +2,49 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <title>Usuarios</title>
+    <title>Gestión de Usuarios</title>
 
     <style>
         body { background-color: #f8f9fa; }
         .table-hover tbody tr.selected {
-            background-color: rgba(13,110,253,0.1);
-            cursor: pointer;
+            background-color: rgba(13, 110, 253, 0.08) !important;
             border-left: 5px solid #0d6efd;
         }
         tr { cursor: pointer; transition: all 0.2s; }
-        .table {
-            background: white;
-            border-radius: 8px;
-            overflow: hidden;
+        .table { background: white; border-radius: 12px; overflow: hidden; }
+        .badge-rol { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        @media (max-width: 768px) {
+            .hide-mobile { display: none; }
+            .h2-responsive { font-size: 1.5rem; }
+            .user-name { font-size: 0.95rem; }
         }
-        .badge-rol { font-size: 0.85rem; }
     </style>
 </head>
 
-<body class="container mt-5">
+<body class="container py-3 py-md-5">
 
 <div th:replace="~{templates/menu.html :: menu}"></div>
 
-<div class="row align-items-center mb-4">
-    <div class="col-md-6">
-        <h2 class="fw-bold text-dark">Listado de Usuarios</h2>
+<div class="row align-items-center mb-4 g-3">
+    <div class="col-12 col-md-6 text-center text-md-start">
+        <h2 class="fw-bold text-dark h2-responsive">Listado de Usuarios</h2>
     </div>
 </div>
 
-<div th:if="${rol != null and rol == 'ADMIN'}">
+<div th:if="${rol != null and rol == 'ADMIN'}" class="mb-4">
     <div th:replace="~{templates/botonesCrud.html :: botonesCrud(false, true, true, true)}"></div>
 </div>
 
-<div class="table-responsive">
-    <table class="table table-hover shadow-sm">
-        <thead class="table-dark">
+<div class="table-responsive shadow-sm rounded-3">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-dark small text-uppercase fw-bold">
         <tr>
-            <th class="py-3 ps-4">Nombre</th>
-            <th class="py-3">Email</th>
+            <th class="py-3 ps-4">Usuario</th>
+            <th class="py-3 hide-mobile">Email</th>
             <th class="py-3">Rol</th>
             <th class="py-3 text-center">Estado</th>
         </tr>
@@ -53,21 +55,35 @@
             th:attr="data-id=${u.id}, data-email=${u.email}"
             class="usuario-row">
 
-            <td th:text="${u.nombre}" class="ps-4 fw-bold"></td>
-            <td th:text="${u.email}"></td>
+            <td class="ps-4">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center border" style="width: 35px; height: 35px;">
+                        <i class="bi bi-person text-secondary"></i>
+                    </div>
+                    <div>
+                        <span th:text="${u.nombre}" class="fw-bold d-block user-name"></span>
+                        <span th:text="${u.email}" class="d-md-none text-muted small"></span>
+                    </div>
+                </div>
+            </td>
+            <td th:text="${u.email}" class="hide-mobile"></td>
             <td>
                 <span th:text="${u.rol}"
-                      th:classappend="${u.rol.name() == 'ADMIN' ? 'badge bg-primary' : 'badge bg-info text-dark'}"
-                      class="badge-rol px-2 py-1">
+                      th:classappend="${u.rol.name() == 'ADMIN' ? 'bg-primary' : 'bg-info text-dark'}"
+                      class="badge badge-rol rounded-pill px-3 py-2">
                 </span>
             </td>
             <td class="text-center">
-                <span class="badge bg-success">Activo</span>
+                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2">
+                    <i class="bi bi-check-circle-fill small"></i> Activo
+                </span>
             </td>
         </tr>
         </tbody>
     </table>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script th:if="${rol != null and rol == 'ADMIN'}">
     const rows = document.querySelectorAll('.usuario-row');
@@ -98,26 +114,32 @@
         });
     });
 
-    btnCrear.addEventListener('click', (e) => {
-        e.preventDefault();
-        window.location.href = "/admin/usuarios/crear";
-    });
+    if(btnCrear) {
+        btnCrear.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.location.href = "/admin/usuarios/crear";
+        });
+    }
 
-    btnEditar.addEventListener('click', (e) => {
-        e.preventDefault();
-        if (!btnEditar.classList.contains('disabled') && btnEditar.dataset.target) {
-            window.location.href = btnEditar.dataset.target;
-        }
-    });
-
-    btnEliminar.addEventListener('click', (e) => {
-        e.preventDefault();
-        if (!btnEliminar.classList.contains('disabled') && btnEliminar.dataset.target) {
-            if (confirm('¿Seguro que deseas desactivar este usuario?')) {
-                window.location.href = btnEliminar.dataset.target;
+    if(btnEditar) {
+        btnEditar.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (!btnEditar.classList.contains('disabled') && btnEditar.dataset.target) {
+                window.location.href = btnEditar.dataset.target;
             }
-        }
-    });
+        });
+    }
+
+    if(btnEliminar) {
+        btnEliminar.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (!btnEliminar.classList.contains('disabled') && btnEliminar.dataset.target) {
+                if (confirm('¿Seguro que deseas desactivar este usuario?')) {
+                    window.location.href = btnEliminar.dataset.target;
+                }
+            }
+        });
+    }
 </script>
 
 </body>
